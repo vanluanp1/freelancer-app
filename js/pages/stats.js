@@ -247,7 +247,7 @@ function renderStatsTasks() {
       ${byCol.slice(0,6).map(x => {
         const pct = x.count ? Math.round(x.done/x.count*100) : 0;
         return `<div class="stats-priority-row">
-          <div class="stats-priority-label" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">${x.col.title}</div>
+          <div class="stats-priority-label" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">${escapeHtml(x.col.title)}</div>
           <div class="stats-priority-bar-wrap">
             <div class="stats-priority-bar" style="background:var(--bg-card2)">
               <div style="width:${x.count?Math.min(100,x.count*10):0}%;background:var(--primary);height:100%;border-radius:inherit;transition:width 0.5s"></div>
@@ -324,10 +324,10 @@ function renderStatsProjects() {
       ${rows.filter(r=>r.stats.workedSec>0).slice(0,8).map(r => {
         const pct = totalProjH ? (r.stats.workedSec/totalProjH*100) : 0;
         return `<div style="display:flex;align-items:center;gap:12px">
-          <div style="width:12px;height:12px;border-radius:50%;background:${r.p.color};flex-shrink:0"></div>
+          <div style="width:12px;height:12px;border-radius:50%;background:${safeCssColor(r.p.color)};flex-shrink:0"></div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.p.name}</div>
-            <div class="progress-bar-wrap" style="margin:0"><div class="progress-bar-fill" style="width:${pct}%;background:${r.p.color}"></div></div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.p.name)}</div>
+            <div class="progress-bar-wrap" style="margin:0"><div class="progress-bar-fill" style="width:${pct}%;background:${safeCssColor(r.p.color)}"></div></div>
           </div>
           <span style="font-size:12px;color:var(--text-muted);flex-shrink:0">${r.workedH}h</span>
         </div>`;
@@ -350,15 +350,15 @@ function renderStatsProjects() {
           ${rows.map(r => `<tr onclick="navigateTo('projects');setTimeout(()=>openProjectDetail('${r.p.id}'),50)" style="cursor:pointer">
             <td>
               <div style="display:flex;align-items:center;gap:8px">
-                <div style="width:10px;height:10px;border-radius:50%;background:${r.p.color}"></div>
-                <span style="font-weight:600">${r.p.name}</span>
+                <div style="width:10px;height:10px;border-radius:50%;background:${safeCssColor(r.p.color)}"></div>
+                <span style="font-weight:600">${escapeHtml(r.p.name)}</span>
               </div>
-              ${r.p.client ? `<div style="font-size:11px;color:var(--text-muted)">👤 ${r.p.client}</div>` : ''}
+              ${r.p.client ? `<div style="font-size:11px;color:var(--text-muted)">👤 ${escapeHtml(r.p.client)}</div>` : ''}
             </td>
             <td>${statusBadge(r.p.status)}</td>
             <td>
               <div style="display:flex;align-items:center;gap:8px;min-width:100px">
-                <div class="progress-bar-wrap" style="flex:1;margin:0"><div class="progress-bar-fill" style="width:${r.stats.pct}%;background:${r.p.color}"></div></div>
+                <div class="progress-bar-wrap" style="flex:1;margin:0"><div class="progress-bar-fill" style="width:${r.stats.pct}%;background:${safeCssColor(r.p.color)}"></div></div>
                 <span style="font-size:12px;font-weight:600;flex-shrink:0">${r.stats.pct}%</span>
               </div>
             </td>
@@ -436,9 +436,9 @@ function renderStatsHistory() {
               ${isDone ? '✓' : '○'}
             </div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:600;${isDone?'text-decoration:line-through;opacity:0.6':''}">${t.title}</div>
+              <div style="font-size:13px;font-weight:600;${isDone?'text-decoration:line-through;opacity:0.6':''}">${escapeHtml(t.title)}</div>
               <div style="display:flex;gap:6px;align-items:center;margin-top:3px">
-                ${project ? `<span class="task-project-dot" style="background:${project.color}">${project.name}</span>` : ''}
+                ${project ? `<span class="task-project-dot" style="background:${safeCssColor(project.color)}">${escapeHtml(project.name)}</span>` : ''}
                 ${priorityBadge(t.priority)}
                 ${wasDeadline ? '<span style="font-size:11px;color:var(--text-muted)">📅 Deadline</span>' : ''}
               </div>
@@ -454,8 +454,8 @@ function renderStatsHistory() {
         <div class="stats-chart-title">🌱 Thói quen</div>
         ${dayHabits.length === 0 ? '<p style="color:var(--text-muted);font-size:12px">Không có thói quen nào được ghi nhận.</p>' :
           dayHabits.map(h => `<div style="display:flex;align-items:center;gap:8px;padding:4px 0">
-            <span style="font-size:18px">${h.icon}</span>
-            <span style="font-size:13px;font-weight:500">${h.name}</span>
+            <span style="font-size:18px">${escapeHtml(h.icon)}</span>
+            <span style="font-size:13px;font-weight:500">${escapeHtml(h.name)}</span>
             <span style="margin-left:auto;color:var(--success);font-weight:700">✓</span>
           </div>`).join('')}
       </div>
@@ -468,7 +468,7 @@ function renderStatsHistory() {
             const task = l.taskId ? getTaskById(l.taskId) : null;
             return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
               <span>${l.type==='pomodoro'?'🍅':'⏱️'}</span>
-              <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${task ? task.title : (l.title || 'Không rõ')}</span>
+            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(task ? task.title : (l.title || 'Không rõ'))}</span>
               <span style="color:var(--text-muted);font-family:'JetBrains Mono',monospace;flex-shrink:0">${formatDuration(l.duration||0)}</span>
             </div>`;
           }).join('')}
@@ -478,9 +478,9 @@ function renderStatsHistory() {
       <!-- Daily review snippet -->
       ${review ? `<div class="card">
         <div class="stats-chart-title">📓 Nhật ký ngày này</div>
-        ${review.morningIntention ? `<div style="font-size:12px;margin-bottom:6px"><b>Kế hoạch sáng:</b> ${review.morningIntention}</div>` : ''}
-        ${review.doneToday ? `<div style="font-size:12px;margin-bottom:6px"><b>Đã làm:</b> ${review.doneToday}</div>` : ''}
-        ${review.lessons ? `<div style="font-size:12px"><b>Bài học:</b> ${review.lessons}</div>` : ''}
+        ${review.morningIntention ? `<div style="font-size:12px;margin-bottom:6px"><b>Kế hoạch sáng:</b> ${escapeHtml(review.morningIntention)}</div>` : ''}
+        ${review.doneToday ? `<div style="font-size:12px;margin-bottom:6px"><b>Đã làm:</b> ${escapeHtml(review.doneToday)}</div>` : ''}
+        ${review.lessons ? `<div style="font-size:12px"><b>Bài học:</b> ${escapeHtml(review.lessons)}</div>` : ''}
         ${review.score ? `<div style="margin-top:8px;font-size:12px;color:var(--primary)">⭐ Điểm ngày: ${review.score}/10</div>` : ''}
       </div>` : ''}
     </div>

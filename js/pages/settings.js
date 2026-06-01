@@ -19,7 +19,7 @@ function renderSettings() {
       <div class="settings-section-title">👤 Thông tin cá nhân</div>
       <div class="settings-row">
         <div><div class="settings-label">Tên hiển thị</div><div class="settings-desc">Dùng trong lời chào trên Dashboard</div></div>
-        <input id="set-name" class="form-input" value="${s.userName||''}" style="max-width:200px" placeholder="Nhập tên của bạn...">
+        <input id="set-name" class="form-input" value="${escapeHtml(s.userName||'')}" style="max-width:200px" placeholder="Nhập tên của bạn...">
       </div>
     </div>
 
@@ -162,7 +162,7 @@ function renderCloudSyncSettings() {
     </div>`;
   }
   return `<div class="settings-row">
-    <div><div class="settings-label">${getCloudUserLabel()}</div><div class="settings-desc">${user.email || ''} · Dữ liệu cloud được bảo vệ theo tài khoản.</div></div>
+    <div><div class="settings-label">${escapeHtml(getCloudUserLabel())}</div><div class="settings-desc">${escapeHtml(user.email || '')} · Dữ liệu cloud được bảo vệ theo tài khoản.</div></div>
     <button class="btn btn-ghost btn-sm" onclick="signOutCloud()">Đăng xuất</button>
   </div>
   <div class="settings-row">
@@ -239,6 +239,6 @@ function applySettings() {
     if (label) label.textContent = 'Chế độ sáng';
   }
   if (s.accentColor && s.accentColor !== '#6C63FF') {
-    document.documentElement.style.setProperty('--primary', s.accentColor);
+    document.documentElement.style.setProperty('--primary', safeCssColor(s.accentColor));
   }
 }

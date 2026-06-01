@@ -40,7 +40,7 @@ function renderFinance() {
       </select>
       <select class="filter-select" id="fin-cat-filter" onchange="onFinFilterChange()">
         <option value="">Tất cả danh mục</option>
-        ${getTransactionCategories().map(c => `<option value="${c.id}" ${_financeCatFilter===c.id?'selected':''}>${c.icon} ${c.name}</option>`).join('')}
+        ${getTransactionCategories().map(c => `<option value="${c.id}" ${_financeCatFilter===c.id?'selected':''}>${escapeHtml(c.icon)} ${escapeHtml(c.name)}</option>`).join('')}
       </select>
     </div>
 
@@ -102,10 +102,10 @@ function renderQuickAddForm(finSettings) {
           <select id="fin-category" class="form-select">
             <option value="">— Chọn danh mục —</option>
             <optgroup label="Chi tiêu 📉" id="fin-cat-expense-group">
-              ${expenseCats.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('')}
+              ${expenseCats.map(c => `<option value="${c.id}">${escapeHtml(c.icon)} ${escapeHtml(c.name)}</option>`).join('')}
             </optgroup>
             <optgroup label="Thu nhập 📈" id="fin-cat-income-group" style="display:none">
-              ${incomeCats.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('')}
+              ${incomeCats.map(c => `<option value="${c.id}">${escapeHtml(c.icon)} ${escapeHtml(c.name)}</option>`).join('')}
             </optgroup>
           </select>
         </div>
@@ -260,10 +260,10 @@ function renderTransactionList() {
           const cat = t.categoryId ? catMap[t.categoryId] : null;
           return `
           <div class="fin-tx-item" id="tx-${t.id}">
-            <div class="fin-tx-icon">${cat ? cat.icon : (t.type==='income'?'💰':'💸')}</div>
+            <div class="fin-tx-icon">${cat ? escapeHtml(cat.icon) : (t.type==='income'?'💰':'💸')}</div>
             <div class="fin-tx-info">
-              <div class="fin-tx-cat">${cat ? cat.name : (t.type==='income'?'Thu nhập':'Chi tiêu')}</div>
-              ${t.note ? `<div class="fin-tx-note">${t.note}</div>` : ''}
+              <div class="fin-tx-cat">${cat ? escapeHtml(cat.name) : (t.type==='income'?'Thu nhập':'Chi tiêu')}</div>
+              ${t.note ? `<div class="fin-tx-note">${escapeHtml(t.note)}</div>` : ''}
             </div>
             <div class="fin-tx-right">
               <div class="fin-tx-amount ${t.type}">
@@ -500,7 +500,7 @@ function renderFinMonthStats() {
               stroke-dasharray="${dashLen} ${circ - dashLen}"
               stroke-dashoffset="${-((seg.startAngle + 90) / 360 * circ)}"
               style="transform-origin:center;transform:rotate(-90deg)">
-              <title>${seg.label}: ${Math.round(seg.pct*100)}%</title>
+              <title>${escapeHtml(seg.label)}: ${Math.round(seg.pct*100)}%</title>
             </circle>`;
           }).join('')}
           <circle cx="50" cy="50" r="25" fill="var(--bg-card)"/>
@@ -511,7 +511,7 @@ function renderFinMonthStats() {
           ${donutSegs.map(seg => `
           <div class="fin-donut-item">
             <div class="fin-legend-dot" style="background:${seg.color}"></div>
-            <span class="fin-donut-label">${seg.label}</span>
+            <span class="fin-donut-label">${escapeHtml(seg.label)}</span>
             <span class="fin-donut-pct">${Math.round(seg.pct*100)}%</span>
           </div>`).join('')}
         </div>
@@ -541,7 +541,7 @@ function renderFinMonthStats() {
       </div>
       ${topExpCat ? `
       <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted)">
-        Chi nhiều nhất: <b>${topCatInfo ? topCatInfo.icon+' '+topCatInfo.name : 'Khác'}</b> — ${formatMoney(topExpCat[1],'VND')} (${Math.round(topExpCat[1]/totalExp*100)}%)
+        Chi nhiều nhất: <b>${topCatInfo ? escapeHtml(topCatInfo.icon+' '+topCatInfo.name) : 'Khác'}</b> — ${formatMoney(topExpCat[1],'VND')} (${Math.round(topExpCat[1]/totalExp*100)}%)
       </div>` : ''}
     </div>
   </div>`;
@@ -582,16 +582,16 @@ function openEditTransaction(txId) {
         <select id="edit-fin-cat" class="form-select">
           <option value="">— Không có —</option>
           <optgroup label="Chi tiêu 📉">
-            ${expenseCats.map(c=>`<option value="${c.id}" ${tx.categoryId===c.id?'selected':''}>${c.icon} ${c.name}</option>`).join('')}
+            ${expenseCats.map(c=>`<option value="${c.id}" ${tx.categoryId===c.id?'selected':''}>${escapeHtml(c.icon)} ${escapeHtml(c.name)}</option>`).join('')}
           </optgroup>
           <optgroup label="Thu nhập 📈">
-            ${incomeCats.map(c=>`<option value="${c.id}" ${tx.categoryId===c.id?'selected':''}>${c.icon} ${c.name}</option>`).join('')}
+            ${incomeCats.map(c=>`<option value="${c.id}" ${tx.categoryId===c.id?'selected':''}>${escapeHtml(c.icon)} ${escapeHtml(c.name)}</option>`).join('')}
           </optgroup>
         </select>
       </div>
       <div class="form-group">
         <label class="form-label">Ghi chú</label>
-        <input id="edit-fin-note" class="form-input" value="${tx.note||''}">
+        <input id="edit-fin-note" class="form-input" value="${escapeHtml(tx.note||'')}">
       </div>
       <div class="form-group">
         <label class="form-label">Ngày</label>
@@ -664,8 +664,8 @@ function openFinanceCategoryManager() {
   const cats = getTransactionCategories();
   const renderCatList = () => cats.map(c => `
     <div class="fin-cat-item" id="fincat-${c.id}">
-      <span style="font-size:20px">${c.icon}</span>
-      <span style="flex:1;font-size:13px;font-weight:600">${c.name}</span>
+      <span style="font-size:20px">${escapeHtml(c.icon)}</span>
+      <span style="flex:1;font-size:13px;font-weight:600">${escapeHtml(c.name)}</span>
       <span class="badge ${c.type==='income'?'badge-active':c.type==='expense'?'badge-high':'badge-medium'}" style="font-size:10px">${c.type==='income'?'Thu':'Chi'}</span>
       ${!c.isDefault ? `<button class="btn-icon" onclick="deleteFinCategory('${c.id}')" title="Xóa">🗑️</button>` : ''}
     </div>`).join('');

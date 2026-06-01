@@ -42,7 +42,7 @@ function renderDashboard() {
   return `
   <div class="page-header">
     <div class="greeting-header">
-      <div class="greeting-text">${getGreeting(settings.userName)}</div>
+      <div class="greeting-text">${escapeHtml(getGreeting(settings.userName))}</div>
       <div class="greeting-date">${formatViDate()}</div>
     </div>
   </div>
@@ -103,8 +103,8 @@ function renderDashboard() {
               <div class="today-task-check ${isDone?'done':''}" onclick="dashToggleTask('${t.id}')" title="${isDone?'Bỏ tick':'Tick xong'}">
                 ${isDone ? '✓' : ''}
               </div>
-              <span class="today-task-name ${isDone?'done':''}">${t.title}</span>
-              ${project ? `<span class="task-project-dot" style="background:${project.color}">${project.name}</span>` : ''}
+              <span class="today-task-name ${isDone?'done':''}">${escapeHtml(t.title)}</span>
+              ${project ? `<span class="task-project-dot" style="background:${safeCssColor(project.color)}">${escapeHtml(project.name)}</span>` : ''}
               ${priorityBadge(t.priority)}
             </div>`;
           }).join('')}
@@ -123,13 +123,13 @@ function renderDashboard() {
             return `<div class="mb-3" style="cursor:pointer" onclick="navigateTo('projects');setTimeout(()=>openProjectDetail('${p.id}'),50)">
               <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2">
-                  <div style="width:10px;height:10px;border-radius:50%;background:${p.color};flex-shrink:0"></div>
-                  <span class="font-bold" style="font-size:13px">${p.name}</span>
+                  <div style="width:10px;height:10px;border-radius:50%;background:${safeCssColor(p.color)};flex-shrink:0"></div>
+                  <span class="font-bold" style="font-size:13px">${escapeHtml(p.name)}</span>
                 </div>
                 <span class="text-sm text-muted">${stats.done}/${stats.total} task</span>
               </div>
               <div class="progress-bar-wrap">
-                <div class="progress-bar-fill" style="width:${stats.pct}%;background:${p.color}"></div>
+                <div class="progress-bar-fill" style="width:${stats.pct}%;background:${safeCssColor(p.color)}"></div>
               </div>
               ${dl !== null ? `<div class="text-sm text-muted mt-2">${dl < 0 ? `⚠️ Trễ ${Math.abs(dl)} ngày` : dl === 0 ? '⏰ Hết hạn hôm nay' : `📅 Còn ${dl} ngày`}</div>` : ''}
             </div>`;
@@ -146,10 +146,10 @@ function renderDashboard() {
             const done = h.completedDates.includes(todayStr);
             const streak = getHabitStreak(h);
             return `<button class="habit-btn ${done?'done':''}"
-              style="${done ? `background:${h.color}20;border-color:${h.color}` : ''}"
+              style="${done ? `background:${safeCssColor(h.color, '#6C63FF')}20;border-color:${safeCssColor(h.color, '#6C63FF')}` : ''}"
               onclick="dashToggleHabit('${h.id}',this)" id="dash-habit-${h.id}">
-              <span class="habit-emoji">${h.icon}</span>
-              <span class="habit-name">${h.name}</span>
+              <span class="habit-emoji">${escapeHtml(h.icon)}</span>
+              <span class="habit-name">${escapeHtml(h.name)}</span>
               <span class="habit-streak">🔥 ${streak} ngày</span>
             </button>`;
           }).join('')}
@@ -184,7 +184,7 @@ function renderPomoDashWidget() {
   return `<div class="pomo-widget mb-4">
     <div class="pomo-widget-time" id="dash-pomo-time">${formatDuration(remaining)}</div>
     <div class="pomo-widget-info">
-      <div class="pomo-widget-task">${taskName || 'Không gắn task'}</div>
+      <div class="pomo-widget-task">${escapeHtml(taskName || 'Không gắn task')}</div>
       <div class="pomo-widget-status">${modeLabel}</div>
     </div>
     <div class="pomo-widget-controls">
@@ -215,9 +215,9 @@ function renderTimeline(blocks, settings) {
       const left = Math.max(0, ((bStartH - TOTAL_START) / TOTAL_SPAN) * 100);
       const width = Math.max(1, ((bEndH - bStartH) / TOTAL_SPAN) * 100);
       const project = b.projectId ? getProjectById(b.projectId) : null;
-      const color = project ? project.color : 'var(--primary)';
+      const color = safeCssColor(project ? project.color : 'var(--primary)');
       return `<div class="timeline-block" style="left:${left}%;width:${width}%;background:${color}">
-        <span>${b.title || ''}</span>
+        <span>${escapeHtml(b.title || '')}</span>
       </div>`;
     }).join('')}
     ${nowH >= TOTAL_START && nowH <= TOTAL_END ? `<div class="timeline-now" style="left:${nowPct}%"></div>` : ''}
@@ -275,13 +275,13 @@ function openAddTaskModal(prefill = {}) {
     <div class="modal-body">
       <div class="form-group">
         <label class="form-label">Tên task *</label>
-        <input id="mt-title" class="form-input" placeholder="Nhập tên task..." value="${prefill.title||''}">
+        <input id="mt-title" class="form-input" placeholder="Nhập tên task..." value="${escapeHtml(prefill.title||'')}">
       </div>
       <div class="form-group">
         <label class="form-label">Dự án</label>
         <select id="mt-project" class="form-select">
           <option value="">— Không thuộc dự án —</option>
-          ${projects.map(p => `<option value="${p.id}" ${prefill.projectId===p.id?'selected':''}>${p.name}</option>`).join('')}
+          ${projects.map(p => `<option value="${p.id}" ${prefill.projectId===p.id?'selected':''}>${escapeHtml(p.name)}</option>`).join('')}
         </select>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -304,7 +304,7 @@ function openAddTaskModal(prefill = {}) {
       </div>
       <div class="form-group">
         <label class="form-label">Ghi chú</label>
-        <textarea id="mt-note" class="form-textarea" placeholder="Ghi chú...">${prefill.note||''}</textarea>
+        <textarea id="mt-note" class="form-textarea" placeholder="Ghi chú...">${escapeHtml(prefill.note||'')}</textarea>
       </div>
     </div>
     <div class="modal-footer">

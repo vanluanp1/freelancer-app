@@ -7,6 +7,21 @@ function genId() {
   return crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
+function escapeHtml(value = '') {
+  return String(value).replace(/[&<>"']/g, char => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[char]);
+}
+
+function safeCssColor(value, fallback = 'var(--primary)') {
+  const color = String(value || '');
+  return /^(#[0-9a-f]{3,8}|var\(--[a-z0-9-]+\))$/i.test(color) ? color : fallback;
+}
+
 // Date helpers
 function toDateStr(date = new Date()) {
   return date.toISOString().slice(0, 10);
@@ -89,7 +104,11 @@ function showToast(msg, type = 'info', duration = 3000) {
   el.className = `toast ${type}`;
   el.id = `toast-${id}`;
   const icons = { success: '✅', error: '❌', info: 'ℹ️' };
-  el.innerHTML = `<span>${icons[type] || ''}</span><span>${msg}</span>`;
+  const icon = document.createElement('span');
+  const text = document.createElement('span');
+  icon.textContent = icons[type] || '';
+  text.textContent = msg;
+  el.append(icon, text);
   container.appendChild(el);
   setTimeout(() => {
     el.style.animation = 'slideOutRight 300ms ease forwards';
@@ -132,7 +151,11 @@ function showContextMenu(x, y, items) {
     }
     const el = document.createElement('div');
     el.className = 'ctx-menu-item' + (item.danger ? ' danger' : '');
-    el.innerHTML = `<span>${item.icon || ''}</span><span>${item.label}</span>`;
+    const icon = document.createElement('span');
+    const label = document.createElement('span');
+    icon.textContent = item.icon || '';
+    label.textContent = item.label;
+    el.append(icon, label);
     el.addEventListener('click', () => { removeContextMenu(); item.action(); });
     menu.appendChild(el);
   });
@@ -435,24 +458,24 @@ function renderSearchResults(query) {
   });
 
   if (results.length === 0) {
-    container.innerHTML = `<div class="search-hint">Không tìm thấy kết quả nào cho "<b>${query}</b>"</div>`;
+    container.innerHTML = `<div class="search-hint">Không tìm thấy kết quả nào cho "<b>${escapeHtml(query)}</b>"</div>`;
     return;
   }
 
   container.innerHTML = results.map((r, i) => `
     <div class="search-result-item ${i === 0 ? 'selected' : ''}" onclick="(${r.action.toString()})()">
-      <span class="search-result-icon">${r.icon}</span>
+      <span class="search-result-icon">${escapeHtml(r.icon)}</span>
       <div class="search-result-info">
         <div class="search-result-title">${highlightMatch(r.title, query)}</div>
-        ${r.meta ? `<div class="search-result-meta">${r.meta}</div>` : ''}
+        ${r.meta ? `<div class="search-result-meta">${escapeHtml(r.meta)}</div>` : ''}
       </div>
     </div>`).join('');
 }
 
 function highlightMatch(text, query) {
-  if (!query) return text;
-  const idx = text.toLowerCase().indexOf(query.toLowerCase());
-  if (idx < 0) return text;
-  return text.slice(0, idx) + `<mark>${text.slice(idx, idx + query.length)}</mark>` + text.slice(idx + query.length);
+  const rawText = String(text || '');
+  if (!query) return escapeHtml(rawText);
+  const idx = rawText.toLowerCase().indexOf(query.toLowerCase());
+  if (idx < 0) return escapeHtml(rawText);
+  return escapeHtml(rawText.slice(0, idx)) + `<mark>${escapeHtml(rawText.slice(idx, idx + query.length))}</mark>` + escapeHtml(rawText.slice(idx + query.length));
 }
-

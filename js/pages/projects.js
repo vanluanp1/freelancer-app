@@ -48,16 +48,16 @@ function renderProjectCard(p) {
   const stats = getProjectStats(p.id);
   const dl = p.deadline ? daysUntil(p.deadline) : null;
   return `<div class="project-card" onclick="openProjectDetail('${p.id}')">
-    <div class="project-card-header" style="background:${p.color}"></div>
+    <div class="project-card-header" style="background:${safeCssColor(p.color)}"></div>
     <div class="project-card-body">
       <div class="flex items-center justify-between mb-2">
-        <div class="project-card-title">${p.name}</div>
+        <div class="project-card-title">${escapeHtml(p.name)}</div>
         ${statusBadge(p.status)}
       </div>
-      ${p.client ? `<div class="project-card-client">👤 ${p.client}</div>` : ''}
+      ${p.client ? `<div class="project-card-client">👤 ${escapeHtml(p.client)}</div>` : ''}
       ${p.deadline ? `<div class="text-sm text-muted mb-2">${dl !== null && dl < 0 ? `⚠️ Đã hết hạn ${Math.abs(dl)} ngày trước` : dl === 0 ? '⏰ Hết hạn hôm nay' : `📅 Còn ${dl} ngày`}</div>` : ''}
       <div class="progress-bar-wrap mb-2">
-        <div class="progress-bar-fill" style="width:${stats.pct}%;background:${p.color}"></div>
+        <div class="progress-bar-fill" style="width:${stats.pct}%;background:${safeCssColor(p.color)}"></div>
       </div>
       <div class="project-card-stats">
         <span>✅ ${stats.done}/${stats.total} task</span>
@@ -95,10 +95,10 @@ function renderProjectDetail(projectId) {
   <div class="project-detail-header">
     <div class="flex items-center gap-3">
       <button class="btn btn-ghost btn-sm" onclick="backToProjects()">← Quay lại</button>
-      <div style="width:14px;height:14px;border-radius:50%;background:${p.color}"></div>
+      <div style="width:14px;height:14px;border-radius:50%;background:${safeCssColor(p.color)}"></div>
       <div>
-        <h1 class="page-title" style="font-size:18px">${p.name}</h1>
-        ${p.client ? `<p class="page-subtitle">👤 ${p.client}</p>` : ''}
+        <h1 class="page-title" style="font-size:18px">${escapeHtml(p.name)}</h1>
+        ${p.client ? `<p class="page-subtitle">👤 ${escapeHtml(p.client)}</p>` : ''}
       </div>
       ${statusBadge(p.status)}
     </div>
@@ -110,7 +110,7 @@ function renderProjectDetail(projectId) {
   <div class="page-body">
     <!-- Progress -->
     <div class="progress-bar-wrap mb-4" style="height:8px">
-      <div class="progress-bar-fill" style="width:${stats.pct}%;background:${p.color}"></div>
+      <div class="progress-bar-fill" style="width:${stats.pct}%;background:${safeCssColor(p.color)}"></div>
     </div>
 
     <!-- Tabs -->
@@ -169,7 +169,7 @@ function renderProjectOverview(p, stats) {
           ${days.map(d => {
             const h = logs.filter(l => l.date === d).reduce((s,l)=>s+l.duration,0)/3600;
             const pct = (h / maxH * 100);
-            return `<div class="chart-bar" style="height:${pct}%;background:${p.color}" title="${h.toFixed(1)}h"></div>`;
+            return `<div class="chart-bar" style="height:${pct}%;background:${safeCssColor(p.color)}" title="${h.toFixed(1)}h"></div>`;
           }).join('')}
         </div>
         <div class="chart-labels">
@@ -181,7 +181,7 @@ function renderProjectOverview(p, stats) {
       <div class="section-title mb-3"><span>🗂️</span> Task theo trạng thái</div>
       ${Object.entries(colCounts).map(([title, count]) => `
         <div class="flex items-center justify-between mb-2">
-          <span style="font-size:13px">${title}</span>
+          <span style="font-size:13px">${escapeHtml(title)}</span>
           <span class="badge badge-active">${count}</span>
         </div>
       `).join('')}
@@ -197,7 +197,7 @@ function renderProjectNotes(p) {
     </div>
     <textarea id="project-notes-area" class="form-textarea" style="min-height:300px;font-size:13px"
       placeholder="Ghi lại cập nhật tiến độ, link tài liệu, ghi chú với khách hàng..."
-      oninput="onProjectNotesChange('${p.id}')">${p.notes || ''}</textarea>
+      oninput="onProjectNotesChange('${p.id}')">${escapeHtml(p.notes || '')}</textarea>
   </div>`;
 }
 
@@ -236,20 +236,20 @@ function openProjectModal(id) {
     <div class="modal-body">
       <div class="form-group">
         <label class="form-label">Tên dự án *</label>
-        <input id="pm-name" class="form-input" value="${p?.name||''}" placeholder="Tên dự án...">
+        <input id="pm-name" class="form-input" value="${escapeHtml(p?.name||'')}" placeholder="Tên dự án...">
       </div>
       <div class="form-group">
         <label class="form-label">Khách hàng / Đối tác</label>
-        <input id="pm-client" class="form-input" value="${p?.client||''}" placeholder="Tên khách hàng...">
+        <input id="pm-client" class="form-input" value="${escapeHtml(p?.client||'')}" placeholder="Tên khách hàng...">
       </div>
       <div class="form-group">
         <label class="form-label">Mô tả</label>
-        <textarea id="pm-desc" class="form-textarea" placeholder="Mô tả ngắn...">${p?.description||''}</textarea>
+        <textarea id="pm-desc" class="form-textarea" placeholder="Mô tả ngắn...">${escapeHtml(p?.description||'')}</textarea>
       </div>
       <div class="form-group">
         <label class="form-label">Màu đại diện</label>
-        <div id="pm-color-swatches" data-selected="${p?.color||PROJECT_COLORS[0]}">
-          ${colorSwatchesHTML(p?.color||PROJECT_COLORS[0],'pm-color')}
+        <div id="pm-color-swatches" data-selected="${safeCssColor(p?.color, PROJECT_COLORS[0])}">
+          ${colorSwatchesHTML(safeCssColor(p?.color, PROJECT_COLORS[0]),'pm-color')}
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -386,13 +386,13 @@ function openProjectRecurringModal(projectId, existingId) {
 
   openModal(`<div class="modal">
     <div class="modal-header">
-      <span class="modal-title">${isEdit?'✏️ Chỉnh sửa':'🔁 Tạo'} Task lặp lại – ${p?.name||''}</span>
+      <span class="modal-title">${isEdit?'✏️ Chỉnh sửa':'🔁 Tạo'} Task lặp lại – ${escapeHtml(p?.name||'')}</span>
       <button class="modal-close">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
         <label class="form-label">Tên task</label>
-        <input id="prec-title" class="form-input" placeholder="VD: Kiểm tra tiến độ hàng ngày" value="${t?.title||''}">
+        <input id="prec-title" class="form-input" placeholder="VD: Kiểm tra tiến độ hàng ngày" value="${escapeHtml(t?.title||'')}">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div class="form-group">
@@ -406,7 +406,7 @@ function openProjectRecurringModal(projectId, existingId) {
         <div class="form-group">
           <label class="form-label">Cột mặc định</label>
           <select id="prec-col" class="form-select">
-            ${allCols.map(c => `<option value="${c.id}" ${t?.columnId===c.id?'selected':''}>${c.title}</option>`).join('')}
+            ${allCols.map(c => `<option value="${c.id}" ${t?.columnId===c.id?'selected':''}>${escapeHtml(c.title)}</option>`).join('')}
           </select>
         </div>
       </div>
@@ -527,4 +527,3 @@ function afterRenderProjects() {
     setTimeout(() => initTasksDnD && initTasksDnD(), 80);
   }
 }
-

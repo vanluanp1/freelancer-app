@@ -563,11 +563,33 @@ function exportAllData(silent = false) {
 function isPlainObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
+function validateBackupValue(value, path = 'data') {
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => validateBackupValue(item, `${path}[${index}]`));
+    return;
+  }
+  if (!isPlainObject(value)) return;
+  Object.entries(value).forEach(([key, item]) => {
+    if ((key === 'id' || key.endsWith('Id')) && item !== null && item !== undefined) {
+      if (typeof item !== 'string' || !/^[a-zA-Z0-9_-]{1,128}$/.test(item)) {
+        throw new Error(`Invalid identifier at ${path}.${key}`);
+      }
+    }
+    if ((key === 'color' || key === 'accentColor') && item !== null && item !== undefined) {
+      if (typeof item !== 'string' || !/^(#[0-9a-f]{3,8}|var\(--[a-z0-9-]+\))$/i.test(item)) {
+        throw new Error(`Invalid color at ${path}.${key}`);
+      }
+    }
+    validateBackupValue(item, `${path}.${key}`);
+  });
+}
 function getValidatedBackupData(payload) {
   const data = payload && isPlainObject(payload.data) ? payload.data : payload;
   if (!isPlainObject(data)) throw new Error('Invalid backup format');
+  if (JSON.stringify(data).length > 5 * 1024 * 1024) throw new Error('Backup is too large');
   const knownKeys = Object.keys(KEYS).filter(key => data[key] !== undefined);
   if (knownKeys.length === 0) throw new Error('No FreelanceHub data found');
+  validateBackupValue(data);
   return data;
 }
 function restoreBackupData(payload) {
@@ -578,6 +600,10 @@ function restoreBackupData(payload) {
 }
 function importAllData(file) {
   if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('File backup quá lớn!', 'error');
+    return;
+  }
   const reader = new FileReader();
   reader.onload = e => {
     try {

@@ -34,11 +34,11 @@ function renderTasks() {
       <div class="filter-bar">
         <div class="filter-search">
           <span class="search-icon">🔍</span>
-          <input type="text" placeholder="Tìm kiếm task..." id="task-search" value="${_taskFilter.search}" oninput="onTaskFilterChange()">
+          <input type="text" placeholder="Tìm kiếm task..." id="task-search" value="${escapeHtml(_taskFilter.search)}" oninput="onTaskFilterChange()">
         </div>
         <select class="filter-select" id="task-filter-project" onchange="onTaskFilterChange()">
           <option value="">Tất cả dự án</option>
-          ${projects.map(p => `<option value="${p.id}" ${_taskFilter.project===p.id?'selected':''}>${p.name}</option>`).join('')}
+          ${projects.map(p => `<option value="${p.id}" ${_taskFilter.project===p.id?'selected':''}>${escapeHtml(p.name)}</option>`).join('')}
         </select>
         <select class="filter-select" id="task-filter-priority" onchange="onTaskFilterChange()">
           <option value="">Tất cả ưu tiên</option>
@@ -84,7 +84,7 @@ function renderColumn(col, projectId) {
 
   return `<div class="kanban-col" data-col-id="${col.id}" id="col-${col.id}">
     <div class="col-header" oncontextmenu="showColMenu(event,'${col.id}')">
-      <span class="col-title">${col.title}</span>
+      <span class="col-title">${escapeHtml(col.title)}</span>
       <span class="col-count">${allTasks.length}</span>
       <button class="col-menu-btn" onclick="event.stopPropagation();showColMenu(event,'${col.id}')">···</button>
     </div>
@@ -138,13 +138,13 @@ function renderTaskCard(task, filteredIds = null) {
     ${task.recurringId ? `<span class="task-recurring-badge" title="Task lặp lại">🔁</span>` : ''}
     ${isOverdue ? `<span class="task-overdue-badge" title="Trễ hạn">⚠️</span>` : ''}
     ${isWarning && !isOverdue ? `<span class="task-overdue-badge" title="Sắp đến hạn">🔔</span>` : ''}
-    <div class="task-title">${task.title}</div>
+    <div class="task-title">${escapeHtml(task.title)}</div>
     ${subTotal > 0 ? `<div class="subtask-progress-bar">
       <div style="width:${Math.round(subDone/subTotal*100)}%;background:var(--primary)"></div>
     </div>
     <div class="task-hours">${subDone}/${subTotal} subtask</div>` : ''}
     <div class="task-meta">
-      ${project ? `<span class="task-project-dot" style="background:${project.color}">${project.name}</span>` : ''}
+      ${project ? `<span class="task-project-dot" style="background:${safeCssColor(project.color)}">${escapeHtml(project.name)}</span>` : ''}
       ${priorityBadge(task.priority)}
       ${task.deadline ? `<span class="task-deadline ${isOverdue?'overdue':isWarning?'warning':''}" title="${formatDate(task.deadline)}">📅 ${deadlineLabel(task.deadline)}</span>` : ''}
       ${task.estimatedHours ? `<span class="task-hours">⏱️ ${task.estimatedHours}h</span>` : ''}
@@ -280,20 +280,20 @@ function openTaskModal(taskId) {
 
   openModal(`<div class="modal">
     <div class="modal-header">
-      <span class="modal-title">${isOverdue ? '⚠️' : isWarning ? '🔔' : project ? `<span style="color:${project.color}">●</span>` : '📋'} Chi tiết Task</span>
+      <span class="modal-title">${isOverdue ? '⚠️' : isWarning ? '🔔' : project ? `<span style="color:${safeCssColor(project.color)}">●</span>` : '📋'} Chi tiết Task</span>
       <button class="modal-close">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
         <label class="form-label">Tên task</label>
-        <input id="edit-task-title" class="form-input" value="${task.title}">
+        <input id="edit-task-title" class="form-input" value="${escapeHtml(task.title)}">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div class="form-group">
           <label class="form-label">Dự án</label>
           <select id="edit-task-project" class="form-select">
             <option value="">— Không thuộc dự án —</option>
-            ${projects.map(p => `<option value="${p.id}" ${task.projectId===p.id?'selected':''}>${p.name}</option>`).join('')}
+            ${projects.map(p => `<option value="${p.id}" ${task.projectId===p.id?'selected':''}>${escapeHtml(p.name)}</option>`).join('')}
           </select>
         </div>
         <div class="form-group">
@@ -318,7 +318,7 @@ function openTaskModal(taskId) {
       <div class="form-group">
         <label class="form-label">Cột (Trạng thái)</label>
         <select id="edit-task-col" class="form-select">
-          ${cols.map(c => `<option value="${c.id}" ${task.columnId===c.id?'selected':''}>${c.title}</option>`).join('')}
+          ${cols.map(c => `<option value="${c.id}" ${task.columnId===c.id?'selected':''}>${escapeHtml(c.title)}</option>`).join('')}
         </select>
       </div>
 
@@ -332,7 +332,7 @@ function openTaskModal(taskId) {
             <div class="subtask-item" id="sub-${s.id}">
               <label class="subtask-check-label">
                 <input type="checkbox" ${s.done?'checked':''} onchange="onSubtaskToggle('${taskId}','${s.id}',this)">
-                <span class="subtask-text ${s.done?'done':''}">${s.text}</span>
+                <span class="subtask-text ${s.done?'done':''}">${escapeHtml(s.text)}</span>
               </label>
               <button class="subtask-del" onclick="onSubtaskDelete('${taskId}','${s.id}')" title="Xóa">✕</button>
             </div>`).join('')}
@@ -347,7 +347,7 @@ function openTaskModal(taskId) {
 
       <div class="form-group">
         <label class="form-label">Ghi chú</label>
-        <textarea id="edit-task-note" class="form-textarea">${task.note||''}</textarea>
+        <textarea id="edit-task-note" class="form-textarea">${escapeHtml(task.note||'')}</textarea>
       </div>
       ${taskLogs.length > 0 ? `
         <div class="form-group">
@@ -386,7 +386,7 @@ function addSubtaskUI(taskId) {
     <div class="subtask-item" id="sub-${s.id}">
       <label class="subtask-check-label">
         <input type="checkbox" ${s.done?'checked':''} onchange="onSubtaskToggle('${taskId}','${s.id}',this)">
-        <span class="subtask-text ${s.done?'done':''}">${s.text}</span>
+        <span class="subtask-text ${s.done?'done':''}">${escapeHtml(s.text)}</span>
       </label>
       <button class="subtask-del" onclick="onSubtaskDelete('${taskId}','${s.id}')" title="Xóa">✕</button>
     </div>`).join('');
@@ -522,12 +522,12 @@ function renderRecurringCard(t) {
       <div class="recurring-card-indicator ${t.active?'active':'paused'}"></div>
     </div>
     <div class="recurring-card-body">
-      <div class="recurring-card-title">${t.title}</div>
+      <div class="recurring-card-title">${escapeHtml(t.title)}</div>
       <div class="recurring-card-meta">
         <span class="recurring-repeat-badge">🔁 ${repeatLabel}</span>
         ${t.startDate ? `<span>📅 Từ ${t.startDate}</span>` : ''}
         ${t.endDate   ? `<span>→ ${t.endDate}</span>` : '<span style="color:var(--text-muted)">Vô thời hạn</span>'}
-        ${project ? `<span class="task-project-dot" style="background:${project.color}">${project.name}</span>` : ''}
+        ${project ? `<span class="task-project-dot" style="background:${safeCssColor(project.color)}">${escapeHtml(project.name)}</span>` : ''}
         ${priorityBadge(t.priority)}
         <span style="color:var(--text-muted);font-size:11px">📝 ${instanceCount} task đã tạo</span>
       </div>
@@ -601,14 +601,14 @@ function openRecurringModal(id) {
     <div class="modal-body">
       <div class="form-group">
         <label class="form-label">Tên task</label>
-        <input id="rec-title" class="form-input" placeholder="VD: Gửi báo cáo hàng ngày" value="${t?.title||''}">
+        <input id="rec-title" class="form-input" placeholder="VD: Gửi báo cáo hàng ngày" value="${escapeHtml(t?.title||'')}">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div class="form-group">
           <label class="form-label">Dự án</label>
           <select id="rec-project" class="form-select">
             <option value="">— Không thuộc dự án —</option>
-            ${projects.map(p => `<option value="${p.id}" ${t?.projectId===p.id?'selected':''}>${p.name}</option>`).join('')}
+            ${projects.map(p => `<option value="${p.id}" ${t?.projectId===p.id?'selected':''}>${escapeHtml(p.name)}</option>`).join('')}
           </select>
         </div>
         <div class="form-group">
@@ -674,7 +674,7 @@ function openRecurringModal(id) {
         <div class="form-group">
           <label class="form-label">Cột mặc định</label>
           <select id="rec-col" class="form-select">
-            ${cols.map(c => `<option value="${c.id}" ${t?.columnId===c.id?'selected':''}>${c.title}</option>`).join('')}
+            ${cols.map(c => `<option value="${c.id}" ${t?.columnId===c.id?'selected':''}>${escapeHtml(c.title)}</option>`).join('')}
           </select>
         </div>
         <div class="form-group">
@@ -685,7 +685,7 @@ function openRecurringModal(id) {
 
       <div class="form-group">
         <label class="form-label">Ghi chú</label>
-        <textarea id="rec-note" class="form-textarea" style="min-height:60px">${t?.note||''}</textarea>
+        <textarea id="rec-note" class="form-textarea" style="min-height:60px">${escapeHtml(t?.note||'')}</textarea>
       </div>
     </div>
     <div class="modal-footer">
@@ -753,4 +753,3 @@ function submitRecurringModal(existingId) {
   _tasksTab = 'recurring';
   renderCurrentPage();
 }
-

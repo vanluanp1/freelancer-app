@@ -120,7 +120,7 @@ function renderPomodoro() {
       <div style="width:100%">
         <select id="pomo-task-select" class="form-select" onchange="onPomoTaskChange()" style="max-width:100%">
           <option value="">— Không gắn task —</option>
-          ${tasks.map(t => `<option value="${t.id}" ${st.taskId===t.id?'selected':''}>${t.title}</option>`).join('')}
+          ${tasks.map(t => `<option value="${t.id}" ${st.taskId===t.id?'selected':''}>${escapeHtml(t.title)}</option>`).join('')}
         </select>
       </div>
 
@@ -428,11 +428,11 @@ function renderTracker() {
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:400px">
       <select id="tracker-task" class="form-select" ${st.running?'disabled':''}>
         <option value="">— Chọn task —</option>
-        ${tasks.map(t => `<option value="${t.id}" ${st.taskId===t.id?'selected':''}>${t.title}</option>`).join('')}
+        ${tasks.map(t => `<option value="${t.id}" ${st.taskId===t.id?'selected':''}>${escapeHtml(t.title)}</option>`).join('')}
       </select>
       <select id="tracker-project" class="form-select" ${st.running?'disabled':''}>
         <option value="">— Chọn dự án —</option>
-        ${projects.map(p => `<option value="${p.id}" ${st.projectId===p.id?'selected':''}>${p.name}</option>`).join('')}
+        ${projects.map(p => `<option value="${p.id}" ${st.projectId===p.id?'selected':''}>${escapeHtml(p.name)}</option>`).join('')}
       </select>
     </div>
     <button class="tracker-start-btn ${st.running?'running':''}" onclick="toggleTracker()">
@@ -456,8 +456,8 @@ function renderTracker() {
                 const task = l.taskId ? getTaskById(l.taskId) : null;
                 const proj = l.projectId ? getProjectById(l.projectId) : null;
                 return `<tr>
-                  <td>${task ? task.title : '—'}</td>
-                  <td>${proj ? `<span style="color:${proj.color}">● ${proj.name}</span>` : '—'}</td>
+                  <td>${task ? escapeHtml(task.title) : '—'}</td>
+                  <td>${proj ? `<span style="color:${safeCssColor(proj.color)}">● ${escapeHtml(proj.name)}</span>` : '—'}</td>
                   <td>${l.startTime ? formatDateTime(l.startTime) : '—'}</td>
                   <td>${l.endTime ? formatDateTime(l.endTime) : '—'}</td>
                   <td><b>${formatDuration(l.duration)}</b></td>
@@ -592,8 +592,8 @@ function renderSchedule() {
                 const dur = b.duration || 60;
                 const heightPx = (dur / 60) * 48;
                 return `<div class="weekly-block" style="background:${color};height:${Math.max(24,heightPx)}px"
-                  title="${b.title||''}" onclick="deleteScheduleBlockUI('${b.id}')">
-                  ${b.title||''}
+                  title="${escapeHtml(b.title||'')}" onclick="deleteScheduleBlockUI('${b.id}')">
+                  ${escapeHtml(b.title||'')}
                 </div>`;
               }).join('')}
             </div>`;
@@ -609,8 +609,8 @@ function renderSchedule() {
         unscheduled.map(t => {
           const proj = t.projectId ? getProjectById(t.projectId) : null;
           return `<div class="unscheduled-task" draggable="true" data-task-id="${t.id}"
-            ondragstart="onUnscheduledDragStart(event,'${t.id}')" style="border-left:3px solid ${proj?proj.color:'var(--border)'}">
-            ${t.title}
+            ondragstart="onUnscheduledDragStart(event,'${t.id}')" style="border-left:3px solid ${safeCssColor(proj?proj.color:'var(--border)', 'var(--border)')}">
+            ${escapeHtml(t.title)}
           </div>`;
         }).join('')}
     </div>

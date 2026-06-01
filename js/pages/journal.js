@@ -69,7 +69,7 @@ function renderJournal() {
                     ${mood ? `<span>${mood.icon}</span>` : ''}
                     ${r.score ? `<span class="badge badge-active">⭐ ${r.score}/10</span>` : ''}
                   </div>
-                  <div class="journal-entry-preview">${r.morningIntention || r.doneToday || '...'}</div>
+                  <div class="journal-entry-preview">${escapeHtml(r.morningIntention || r.doneToday || '...')}</div>
                 </div>`;
               }).join('')}
             </div>`;
@@ -138,7 +138,7 @@ function renderJournalEntry() {
           <label class="form-label">Hôm nay tôi muốn hoàn thành (3 mục tiêu quan trọng nhất):</label>
           ${(r.morningGoals || ['','','']).map((g, i) => `
             <input class="form-input mb-2 journal-field" id="jf-goal-${i}" placeholder="Mục tiêu quan trọng ${i+1}..."
-              value="${g}" ${isReadOnly?'readonly':''} data-field="morningGoals" data-index="${i}">`).join('')}
+              value="${escapeHtml(g)}" ${isReadOnly?'readonly':''} data-field="morningGoals" data-index="${i}">`).join('')}
         </div>
         <div class="form-group">
           <label class="form-label">Tâm trạng bắt đầu ngày:</label>
@@ -150,7 +150,7 @@ function renderJournalEntry() {
         <div class="form-group">
           <label class="form-label">Ý định hôm nay:</label>
           <input class="form-input journal-field" id="jf-intention" placeholder='VD: "Tập trung, không lướt mạng xã hội"'
-            value="${r.morningIntention||''}" ${isReadOnly?'readonly':''}>
+            value="${escapeHtml(r.morningIntention||'')}" ${isReadOnly?'readonly':''}>
         </div>
       </div>
     </div>
@@ -161,19 +161,19 @@ function renderJournalEntry() {
       <div class="collapsible-body">
         ${doneTasks.length > 0 ? `<div style="margin-bottom:12px;padding:10px;background:var(--bg-card2);border-radius:var(--radius-sm)">
           <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:6px">✅ Task đã hoàn thành hôm nay:</div>
-          ${doneTasks.map(t => `<div style="font-size:13px;padding:2px 0">• ${t.title}</div>`).join('')}
+          ${doneTasks.map(t => `<div style="font-size:13px;padding:2px 0">• ${escapeHtml(t.title)}</div>`).join('')}
         </div>` : ''}
         <div class="form-group">
           <label class="form-label">Đã hoàn thành thêm:</label>
-          <textarea class="form-textarea journal-field" id="jf-done" placeholder="Ghi thêm những gì bạn đã làm..." ${isReadOnly?'readonly':''}>${r.doneToday||''}</textarea>
+          <textarea class="form-textarea journal-field" id="jf-done" placeholder="Ghi thêm những gì bạn đã làm..." ${isReadOnly?'readonly':''}>${escapeHtml(r.doneToday||'')}</textarea>
         </div>
         <div class="form-group">
           <label class="form-label">Chưa làm được / Bị vướng:</label>
-          <textarea class="form-textarea journal-field" id="jf-blockers" ${isReadOnly?'readonly':''}>${r.blockers||''}</textarea>
+          <textarea class="form-textarea journal-field" id="jf-blockers" ${isReadOnly?'readonly':''}>${escapeHtml(r.blockers||'')}</textarea>
         </div>
         <div class="form-group">
           <label class="form-label">Nguyên nhân nếu không đạt kế hoạch:</label>
-          <textarea class="form-textarea journal-field" id="jf-fail" ${isReadOnly?'readonly':''}>${r.failReasons||''}</textarea>
+          <textarea class="form-textarea journal-field" id="jf-fail" ${isReadOnly?'readonly':''}>${escapeHtml(r.failReasons||'')}</textarea>
         </div>
       </div>
     </div>
@@ -184,11 +184,11 @@ function renderJournalEntry() {
       <div class="collapsible-body">
         <div class="form-group">
           <label class="form-label">Điều tôi học được hôm nay:</label>
-          <textarea class="form-textarea journal-field" id="jf-lessons" ${isReadOnly?'readonly':''}>${r.lessons||''}</textarea>
+          <textarea class="form-textarea journal-field" id="jf-lessons" ${isReadOnly?'readonly':''}>${escapeHtml(r.lessons||'')}</textarea>
         </div>
         <div class="form-group">
           <label class="form-label">Điều tôi sẽ làm khác đi ngày mai:</label>
-          <textarea class="form-textarea journal-field" id="jf-improvements" ${isReadOnly?'readonly':''}>${r.improvements||''}</textarea>
+          <textarea class="form-textarea journal-field" id="jf-improvements" ${isReadOnly?'readonly':''}>${escapeHtml(r.improvements||'')}</textarea>
         </div>
         ${!isReadOnly ? `<button class="btn btn-ghost btn-sm" onclick="getRandomQuestion()">🎲 Câu hỏi gợi ý</button>
         <div id="random-question" style="margin-top:10px;padding:12px;background:var(--primary-light);border-radius:var(--radius-sm);font-size:13px;font-style:italic;display:none"></div>` : ''}

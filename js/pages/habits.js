@@ -81,10 +81,10 @@ function renderHabitButton(h, todayStr) {
   const streak = getHabitStreak(h);
   return `<button class="habit-btn ${done?'done':''}"
     id="habit-btn-${h.id}"
-    style="${done ? `background:${h.color}25;border-color:${h.color}` : ''}"
+    style="${done ? `background:${safeCssColor(h.color, '#6C63FF')}25;border-color:${safeCssColor(h.color, '#6C63FF')}` : ''}"
     onclick="onHabitTick('${h.id}',this)">
-    <span class="habit-emoji">${h.icon}</span>
-    <span class="habit-name">${h.name}</span>
+    <span class="habit-emoji">${escapeHtml(h.icon)}</span>
+    <span class="habit-name">${escapeHtml(h.name)}</span>
     <span class="habit-streak">🔥 ${streak} ngày</span>
   </button>`;
 }
@@ -98,8 +98,8 @@ function onHabitTick(id, btnEl) {
     playHabitTick();
     showToast(`${habit.icon} ${habit.name} — Hoàn thành! 🎉`, 'success');
     btnEl.classList.add('done');
-    btnEl.style.background = `${habit.color}25`;
-    btnEl.style.borderColor = habit.color;
+    btnEl.style.background = `${safeCssColor(habit.color, '#6C63FF')}25`;
+    btnEl.style.borderColor = safeCssColor(habit.color, '#6C63FF');
   } else {
     btnEl.classList.remove('done');
     btnEl.style.background = '';
@@ -196,13 +196,13 @@ function renderHabitStats() {
       const due7 = last7.filter(ds => isHabitDueOnDate(h, ds)).length;
       const pct7 = due7 > 0 ? Math.round(done7 / due7 * 100) : 0;
       const streak = getHabitStreak(h);
-      const color = h.color || 'var(--primary)';
+      const color = safeCssColor(h.color);
 
       return `<div class="card mb-3">
         <div class="flex items-center gap-3 mb-3">
-          <span style="font-size:28px">${h.icon}</span>
+          <span style="font-size:28px">${escapeHtml(h.icon)}</span>
           <div class="flex-1">
-            <div class="font-bold" style="font-size:14px">${h.name}</div>
+            <div class="font-bold" style="font-size:14px">${escapeHtml(h.name)}</div>
             <div class="text-sm text-muted">Streak hiện tại: 🔥 ${streak} ngày</div>
           </div>
           <div style="text-align:right">
@@ -237,9 +237,9 @@ function renderHabitManage() {
       habits.map(h => `
         <div class="card mb-2 flex items-center gap-3" draggable="true" data-id="${h.id}">
           <span style="font-size:24px;cursor:grab">⠿</span>
-          <span style="font-size:24px">${h.icon}</span>
+          <span style="font-size:24px">${escapeHtml(h.icon)}</span>
           <div class="flex-1">
-            <div class="font-bold" style="font-size:13px">${h.name}</div>
+            <div class="font-bold" style="font-size:13px">${escapeHtml(h.name)}</div>
             <div class="text-sm text-muted">${h.frequency === 'daily' ? 'Hàng ngày' : `${h.weekDays?.length || 0} ngày/tuần`}${h.archived ? ' — 📦 Đã archive' : ''}</div>
           </div>
           <div class="flex gap-2">
@@ -296,17 +296,17 @@ function openHabitModal(id) {
     <div class="modal-body">
       <div class="form-group">
         <label class="form-label">Tên thói quen *</label>
-        <input id="hm-name" class="form-input" value="${h?.name||''}" placeholder="VD: Uống 2L nước...">
+        <input id="hm-name" class="form-input" value="${escapeHtml(h?.name||'')}" placeholder="VD: Uống 2L nước...">
       </div>
       <div class="form-group">
         <label class="form-label">Icon</label>
-        <div id="hm-icon-picker" class="emoji-selector" data-selected="${h?.icon||HABIT_ICONS[0]}">
+        <div id="hm-icon-picker" class="emoji-selector" data-selected="${escapeHtml(h?.icon||HABIT_ICONS[0])}">
           ${HABIT_ICONS.map(ic => `<span class="emoji-option ${(h?.icon||HABIT_ICONS[0])===ic?'selected':''}" data-icon="${ic}" onclick="selectHabitIcon('${ic}')">${ic}</span>`).join('')}
         </div>
       </div>
       <div class="form-group">
         <label class="form-label">Màu sắc</label>
-        <div id="hm-color-swatches" data-selected="${h?.color||HABIT_COLORS[0]}">
+        <div id="hm-color-swatches" data-selected="${safeCssColor(h?.color, HABIT_COLORS[0])}">
           ${HABIT_COLORS.map(c => `<div class="color-swatch ${(h?.color||HABIT_COLORS[0])===c?'selected':''}" style="background:${c}" data-color="${c}" onclick="selectHabitColor('${c}',this)"></div>`).join('')}
         </div>
       </div>
