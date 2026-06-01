@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FreelanceHub — Quản lý công việc freelancer</title>
+  <meta name="description" content="Ứng dụng quản lý công việc toàn diện dành cho freelancer: Kanban, Pomodoro, Habit Tracker, Nhật ký và nhiều hơn nữa." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <span class="logo-icon">🚀</span>
+          <span class="logo-text">FreelanceHub</span>
+        </div>
+        <button id="sidebar-toggle" class="sidebar-toggle" title="Thu gọn sidebar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="dashboard">
+          <span class="nav-icon">🏠</span>
+          <span class="nav-label">Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-page="tasks">
+          <span class="nav-icon">✅</span>
+          <span class="nav-label">Tasks</span>
+        </a>
+        <a href="#" class="nav-item" data-page="projects">
+          <span class="nav-icon">📁</span>
+          <span class="nav-label">Dự án</span>
+        </a>
+        <a href="#" class="nav-item" data-page="time">
+          <span class="nav-icon">⏱️</span>
+          <span class="nav-label">Thời gian</span>
+        </a>
+        <a href="#" class="nav-item" data-page="finance">
+          <span class="nav-icon">💰</span>
+          <span class="nav-label">Thu Chi</span>
+        </a>
+        <a href="#" class="nav-item" data-page="habits">
+          <span class="nav-icon">🌱</span>
+          <span class="nav-label">Thói quen</span>
+        </a>
+        <a href="#" class="nav-item" data-page="journal">
+          <span class="nav-icon">📓</span>
+          <span class="nav-label">Nhật ký</span>
+        </a>
+        <a href="#" class="nav-item" data-page="stats">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label">Thống kê</span>
+        </a>
+        <a href="#" class="nav-item" data-page="settings">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-label">Cài đặt</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="dark-mode-toggle" class="dark-mode-btn" title="Chuyển chế độ tối/sáng">
+          <span id="dark-mode-icon">🌙</span>
+          <span class="nav-label">Chế độ tối</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="main-content" class="main-content">
+      <!-- Pages injected here by JS -->
+    </main>
+
+    <!-- Bottom Nav (mobile) -->
+    <nav class="bottom-nav" id="bottom-nav">
+      <a href="#" class="bottom-nav-item active" data-page="dashboard">
+        <span class="bn-icon">🏠</span>
+        <span class="bn-label">Home</span>
+      </a>
+      <a href="#" class="bottom-nav-item" data-page="tasks">
+        <span class="bn-icon">✅</span>
+        <span class="bn-label">Tasks</span>
+      </a>
+      <a href="#" class="bottom-nav-item" data-page="projects">
+        <span class="bn-icon">📁</span>
+        <span class="bn-label">Dự án</span>
+      </a>
+      <a href="#" class="bottom-nav-item" data-page="finance">
+        <span class="bn-icon">💰</span>
+        <span class="bn-label">Thu Chi</span>
+      </a>
+      <a href="#" class="bottom-nav-item" data-page="habits">
+        <span class="bn-icon">🌱</span>
+        <span class="bn-label">Thói quen</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- Global Modal Container -->
+  <div id="modal-backdrop" class="modal-backdrop hidden"></div>
+  <div id="modal-container" class="modal-container hidden"></div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
+
+  <script src="js/utils.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/cloud.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/dnd.js"></script>
+  <script src="js/pages/dashboard.js"></script>
+  <script src="js/pages/tasks.js"></script>
+  <script src="js/pages/projects.js"></script>
+  <script src="js/pages/time.js"></script>
+  <script src="js/pages/habits.js"></script>
+  <script src="js/pages/journal.js"></script>
+  <script src="js/pages/stats.js"></script>
+  <script src="js/pages/finance.js"></script>
+  <script src="js/pages/settings.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
