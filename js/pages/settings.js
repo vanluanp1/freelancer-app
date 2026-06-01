@@ -157,15 +157,12 @@ function renderCloudSyncSettings() {
   const user = getCloudUser();
   if (!user) {
     return `<div class="settings-row">
-      <div><div class="settings-label">Đăng nhập bằng magic link</div><div class="settings-desc">Supabase sẽ gửi link đăng nhập vào email của bạn.</div></div>
-      <div style="display:flex;gap:8px">
-        <input id="cloud-email" type="email" class="form-input" placeholder="you@example.com" style="max-width:220px">
-        <button class="btn btn-primary btn-sm" onclick="sendCloudMagicLink()">Gửi link</button>
-      </div>
+      <div><div class="settings-label">Chưa đăng nhập</div><div class="settings-desc">Đăng nhập Google để dùng backup cloud.</div></div>
+      <button class="btn btn-primary btn-sm" onclick="signInWithGoogle()">Đăng nhập Google</button>
     </div>`;
   }
   return `<div class="settings-row">
-    <div><div class="settings-label">${user.email || 'Đã đăng nhập'}</div><div class="settings-desc">Backup cloud được bảo vệ theo tài khoản Supabase.</div></div>
+    <div><div class="settings-label">${getCloudUserLabel()}</div><div class="settings-desc">${user.email || ''} · Dữ liệu cloud được bảo vệ theo tài khoản.</div></div>
     <button class="btn btn-ghost btn-sm" onclick="signOutCloud()">Đăng xuất</button>
   </div>
   <div class="settings-row">

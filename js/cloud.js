@@ -4,6 +4,7 @@
 
 let _cloudClient = null;
 let _cloudUser = null;
+let _authSubscription = null;
 
 function isCloudConfigured() {
   const config = window.FREELANCEHUB_CLOUD_CONFIG || {};
@@ -23,50 +24,91 @@ function getCloudUser() {
   return _cloudUser;
 }
 
+function setAuthStatus(message, type = '') {
+  const status = document.getElementById('auth-status');
+  if (!status) return;
+  status.textContent = message;
+  status.className = `auth-status ${type}`.trim();
+}
+
+function showAuthScreen(message = 'Vui lòng đăng nhập bằng Google để tiếp tục.', type = '') {
+  document.getElementById('auth-screen')?.classList.remove('auth-hidden');
+  document.getElementById('app')?.classList.add('auth-hidden');
+  setAuthStatus(message, type);
+}
+
+function showAuthenticatedApp() {
+  document.getElementById('auth-screen')?.classList.add('auth-hidden');
+  document.getElementById('app')?.classList.remove('auth-hidden');
+}
+
 function refreshCloudSettings() {
   if (typeof _currentPage !== 'undefined' && _currentPage === 'settings') renderCurrentPage();
 }
 
 async function initCloudSync() {
   const client = getCloudClient();
-  if (!client) return;
-  const { data } = await client.auth.getSession();
+  if (!client) {
+    showAuthScreen('Supabase chưa được cấu hình. Vui lòng liên hệ quản trị viên.', 'error');
+    return false;
+  }
+  const { data, error } = await client.auth.getSession();
+  if (error) {
+    showAuthScreen(`Không thể kiểm tra đăng nhập: ${error.message}`, 'error');
+    return false;
+  }
   _cloudUser = data.session?.user || null;
-  client.auth.onAuthStateChange((_event, session) => {
-    _cloudUser = session?.user || null;
-    refreshCloudSettings();
-  });
-  refreshCloudSettings();
+  if (!_authSubscription) {
+    const { data: authListener } = client.auth.onAuthStateChange((_event, session) => {
+      _cloudUser = session?.user || null;
+      if (_cloudUser) {
+        showAuthenticatedApp();
+        if (typeof bootAuthenticatedApp === 'function') bootAuthenticatedApp();
+      } else {
+        showAuthScreen();
+      }
+      refreshCloudSettings();
+    });
+    _authSubscription = authListener.subscription;
+  }
+  if (!_cloudUser) {
+    showAuthScreen();
+    return false;
+  }
+  showAuthenticatedApp();
+  return true;
 }
 
-async function sendCloudMagicLink() {
+async function signInWithGoogle() {
   const client = getCloudClient();
   if (!client) {
-    showToast('Supabase chưa được cấu hình!', 'error');
+    showAuthScreen('Supabase chưa được cấu hình. Vui lòng liên hệ quản trị viên.', 'error');
     return;
   }
-  const email = document.getElementById('cloud-email')?.value.trim();
-  if (!email) {
-    showToast('Vui lòng nhập email đăng nhập!', 'info');
-    return;
-  }
-  const { error } = await client.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: `${location.origin}${location.pathname}` },
+  setAuthStatus('Đang chuyển tới Google...');
+  const { error } = await client.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: `${location.origin}${location.pathname}` },
   });
   if (error) {
-    showToast(`Không thể gửi magic link: ${error.message}`, 'error', 5000);
-    return;
+    showAuthScreen(`Không thể đăng nhập Google: ${error.message}`, 'error');
   }
-  showToast('Đã gửi magic link đăng nhập vào email!', 'success', 5000);
 }
 
 async function signOutCloud() {
   const client = getCloudClient();
   if (!client) return;
   const { error } = await client.auth.signOut();
-  if (error) showToast(`Không thể đăng xuất: ${error.message}`, 'error', 5000);
-  else showToast('Đã đăng xuất Supabase!', 'success');
+  if (error) {
+    showToast(`Không thể đăng xuất: ${error.message}`, 'error', 5000);
+    return;
+  }
+  _cloudUser = null;
+  showAuthScreen('Đã đăng xuất an toàn.');
+}
+
+function getCloudUserLabel() {
+  return _cloudUser?.user_metadata?.full_name || _cloudUser?.email || 'Tài khoản Google';
 }
 
 async function uploadCloudBackup() {
@@ -120,4 +162,3 @@ async function restoreCloudBackup() {
     showToast('Backup cloud không hợp lệ!', 'error');
   }
 }
-

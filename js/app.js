@@ -3,6 +3,7 @@
    ============================================ */
 
 let _currentPage = 'dashboard';
+let _appBooted = false;
 
 // ---- Page Registry ----
 const PAGES = {
@@ -122,21 +123,16 @@ function initShortcuts() {
 }
 
 
-// ---- Boot ----
-window.addEventListener('DOMContentLoaded', () => {
-  // Apply saved settings (dark mode, accent color)
-  applySettings();
-  initCloudSync();
+function bootAuthenticatedApp() {
+  if (_appBooted || !getCloudUser()) return;
+  _appBooted = true;
 
-  // Init sidebar and nav
+  applySettings();
   initSidebar();
   initNav();
   initShortcuts();
 
-  // Run recurring engine to generate today's tasks
   const newRecurring = processRecurringTasks();
-
-  // Render initial page
   navigateTo('dashboard');
   if (newRecurring > 0) {
     setTimeout(() => showToast(`🔁 Đã tạo ${newRecurring} task lặp lại mới!`, 'info'), 800);
@@ -161,4 +157,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Service worker for PWA (optional enhancement)
   // if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+}
+
+// ---- Boot ----
+window.addEventListener('DOMContentLoaded', async () => {
+  const authenticated = await initCloudSync();
+  if (authenticated) bootAuthenticatedApp();
 });

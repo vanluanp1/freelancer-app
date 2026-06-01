@@ -11,7 +11,20 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="app">
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-logo">🚀</div>
+      <h1>FreelanceHub</h1>
+      <p>Đăng nhập để truy cập dữ liệu công việc của bạn.</p>
+      <button id="google-login-btn" class="google-login-btn" onclick="signInWithGoogle()">
+        <span class="google-icon">G</span>
+        Tiếp tục với Google
+      </button>
+      <div id="auth-status" class="auth-status">Đang kiểm tra phiên đăng nhập...</div>
+    </div>
+  </div>
+
+  <div id="app" class="auth-hidden">
     <!-- Sidebar -->
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-header">
@@ -114,7 +127,7 @@
   <script src="js/utils.js"></script>
   <script src="js/store.js"></script>
   <script src="js/config.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2"></script>
   <script src="js/cloud.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/dnd.js"></script>
