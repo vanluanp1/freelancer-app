@@ -19,6 +19,15 @@ function renderDashboard() {
   const todayHabitsDone = habits.filter(h => h.completedDates.includes(todayStr)).length;
   const workedSec = getTodayWorkedSeconds();
   const finSummary = (typeof getFinanceSummaryThisMonth === 'function') ? getFinanceSummaryThisMonth() : { inc:0, exp:0, balance:0 };
+  const deadlineSummary = typeof getDeadlineReminderSummary === 'function'
+    ? getDeadlineReminderSummary()
+    : { overdue: [], todayTasks: [], soon: [] };
+  const workload = projects.map(project => ({
+    project,
+    hours: getTimeLogs()
+      .filter(log => log.projectId === project.id && log.date?.startsWith(todayStr.slice(0, 7)))
+      .reduce((sum, log) => sum + (log.duration || 0), 0) / 3600,
+  })).sort((a, b) => b.hours - a.hours).slice(0, 4);
 
   // "Cần làm hôm nay": tổng hợp 3 nguồn, sắp xếp theo độ ưu tiên
   const priorityOrder = { high: 0, medium: 1, low: 2 };
@@ -86,6 +95,20 @@ function renderDashboard() {
 
     <!-- Pomodoro Mini Widget -->
     ${pomoWidgetHTML}
+
+    <div class="dashboard-grid-2 mb-4">
+      <div class="card">
+        <div class="flex items-center justify-between mb-3">
+          <div class="section-title" style="margin:0"><span>🚨</span> Ưu tiên deadline</div>
+          <button class="btn btn-ghost btn-sm" onclick="navigateTo('calendar')">Mở lịch</button>
+        </div>
+        ${renderDeadlinePriorityList(deadlineSummary)}
+      </div>
+      <div class="card">
+        <div class="section-title mb-3"><span>⏱️</span> Giờ làm theo dự án tháng này</div>
+        ${renderProjectWorkload(workload)}
+      </div>
+    </div>
 
     <!-- Tasks + Projects -->
     <div class="dashboard-grid-2 mb-4">
@@ -163,6 +186,33 @@ function renderDashboard() {
     </div>
 
   </div>`;
+}
+
+function renderDeadlinePriorityList(summary) {
+  const tasks = [
+    ...summary.overdue.map(task => ({ task, label: 'Quá hạn', cls: 'overdue' })),
+    ...summary.todayTasks.map(task => ({ task, label: 'Hôm nay', cls: 'today' })),
+    ...summary.soon.map(task => ({ task, label: `Còn ${daysUntil(task.deadline)} ngày`, cls: 'soon' })),
+  ].slice(0, 6);
+  if (!tasks.length) return '<div class="no-data dashboard-empty"><p>Không có deadline gấp.</p></div>';
+  return tasks.map(({ task, label, cls }) => `
+    <div class="deadline-priority-item" onclick="openTaskModal('${task.id}')">
+      <span class="deadline-priority-title">${escapeHtml(task.title)}</span>
+      <span class="deadline-priority-badge ${cls}">${label}</span>
+    </div>`).join('');
+}
+
+function renderProjectWorkload(rows) {
+  if (!rows.length) return '<div class="no-data dashboard-empty"><p>Chưa có dữ liệu giờ làm.</p></div>';
+  const max = Math.max(1, ...rows.map(row => row.hours));
+  return rows.map(({ project, hours }) => `
+    <div class="workload-row">
+      <div class="flex items-center justify-between">
+        <span>${escapeHtml(project.name)}</span>
+        <b>${hours.toFixed(1)}h</b>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${Math.round(hours / max * 100)}%;background:${safeCssColor(project.color)}"></div></div>
+    </div>`).join('');
 }
 
 function renderPomoDashWidget() {

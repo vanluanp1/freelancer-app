@@ -19,10 +19,12 @@ const KEYS = {
 };
 const BACKUP_STORAGE_KEY = 'fl_backup_snapshots';
 const LAST_BACKUP_DATE_KEY = 'fl_last_backup_date';
+const LOCAL_MODIFIED_AT_KEY = 'fl_local_modified_at';
 const LEGACY_STORAGE_MIGRATION_KEY = 'fl_legacy_storage_migrated';
 const BACKUP_VERSION = 1;
 const MAX_LOCAL_BACKUPS = 7;
 let _activeStorageUserId = null;
+let _suppressDataChangeEvents = false;
 
 // ---- Generic ----
 function getScopedStorageKey(key) {
@@ -45,6 +47,21 @@ function load(key) {
 }
 function save(key, data) {
   setScopedItem(key, JSON.stringify(data));
+  if (!_suppressDataChangeEvents && Object.values(KEYS).includes(key)) {
+    const modifiedAt = now();
+    setScopedItem(LOCAL_MODIFIED_AT_KEY, modifiedAt);
+    if (typeof onLocalDataChanged === 'function') onLocalDataChanged(modifiedAt);
+  }
+}
+function getLocalModifiedAt() {
+  return getScopedItem(LOCAL_MODIFIED_AT_KEY) || '';
+}
+function hasLocalUserData() {
+  return [KEYS.tasks, KEYS.projects, KEYS.timelogs, KEYS.habits, KEYS.reviews, KEYS.schedule, KEYS.transactions]
+    .some(key => {
+      const value = load(key);
+      return Array.isArray(value) ? value.length > 0 : Boolean(value);
+    });
 }
 function migrateLegacyStorage() {
   if (localStorage.getItem(LEGACY_STORAGE_MIGRATION_KEY)) return;
@@ -59,6 +76,7 @@ function migrateLegacyStorage() {
   localStorage.setItem(LEGACY_STORAGE_MIGRATION_KEY, _activeStorageUserId);
 }
 function initializeScopedStorage() {
+  _suppressDataChangeEvents = true;
   if (!load(KEYS.columns)) save(KEYS.columns, DEFAULT_COLUMNS);
   if (!load(KEYS.txCategories)) save(KEYS.txCategories, DEFAULT_TX_CATEGORIES);
 
@@ -68,6 +86,7 @@ function initializeScopedStorage() {
     const todayStr = today();
     if (lastBackup !== todayStr) createLocalBackupSnapshot('automatic');
   }
+  _suppressDataChangeEvents = false;
 }
 function activateUserStorage(userId) {
   if (!userId) return false;
@@ -87,6 +106,7 @@ const DEFAULT_SETTINGS = {
   workHoursEnd: '18:00',
   soundEnabled: true,
   autoBackup: false,
+  notificationsEnabled: false,
 };
 function getSettings() {
   return Object.assign({}, DEFAULT_SETTINGS, load(KEYS.settings) || {});
@@ -530,6 +550,10 @@ function createBackupPayload(reason = 'manual') {
     version: BACKUP_VERSION,
     createdAt: now(),
     reason,
+    sync: {
+      modifiedAt: getLocalModifiedAt() || now(),
+      schemaVersion: BACKUP_VERSION,
+    },
     data: collectAllData(),
   };
 }
@@ -594,9 +618,12 @@ function getValidatedBackupData(payload) {
 }
 function restoreBackupData(payload) {
   const data = getValidatedBackupData(payload);
+  _suppressDataChangeEvents = true;
   Object.entries(KEYS).forEach(([k, v]) => {
     if (data[k] !== undefined) save(v, data[k]);
   });
+  setScopedItem(LOCAL_MODIFIED_AT_KEY, payload?.sync?.modifiedAt || payload?.createdAt || now());
+  _suppressDataChangeEvents = false;
 }
 function importAllData(file) {
   if (!file) return;
@@ -640,8 +667,15 @@ function getBackupStatus() {
 function clearAllData() {
   createLocalBackupSnapshot('before-clear');
   Object.values(KEYS).forEach(removeScopedItem);
+  const modifiedAt = now();
+  setScopedItem(LOCAL_MODIFIED_AT_KEY, modifiedAt);
+  if (typeof onLocalDataChanged === 'function') onLocalDataChanged(modifiedAt);
   showToast('Đã xóa toàn bộ dữ liệu!', 'info');
-  setTimeout(() => location.reload(), 1000);
+  if (typeof syncCloudBackup === 'function' && getCloudUser()) {
+    Promise.resolve(syncCloudBackup()).finally(() => setTimeout(() => location.reload(), 400));
+  } else {
+    setTimeout(() => location.reload(), 1000);
+  }
 }
 
 // ---- Project stats helper ----

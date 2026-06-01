@@ -9,6 +9,10 @@
 - Snapshot backup nội bộ tự động mỗi ngày, giữ tối đa 7 bản gần nhất.
 - Bắt buộc đăng nhập Google qua Supabase Auth trước khi truy cập ứng dụng.
 - Đồng bộ snapshot lên Supabase theo tài khoản đăng nhập.
+- Tự đồng bộ cloud sau khi dữ liệu thay đổi, tự lấy bản mới hơn khi mở trên thiết bị khác.
+- PWA có thể cài lên desktop hoặc điện thoại và mở giao diện khi offline.
+- Nhắc deadline và Pomodoro bằng Notification API.
+- Lịch tháng kéo thả task để đổi deadline.
 
 ## Chạy local
 

@@ -11,6 +11,7 @@ const PAGES = {
   tasks:     { render: renderTasks,     after: afterRenderTasks },
   projects:  { render: renderProjects,  after: afterRenderProjects },
   time:      { render: renderTime,      after: null },
+  calendar:  { render: renderCalendar,  after: null },
   finance:   { render: renderFinance,   after: null },
   habits:    { render: renderHabits,    after: null },
   journal:   { render: renderJournal,   after: afterRenderJournal },
@@ -49,7 +50,7 @@ function renderCurrentPage() {
   if (pageReg.after) pageReg.after();
 
   // Update document title
-  const titles = { dashboard:'Dashboard', tasks:'Tasks', projects:'Dự án', time:'Thời gian', finance:'Thu Chi', habits:'Thói quen', journal:'Nhật ký', stats:'Thống kê', settings:'Cài đặt' };
+  const titles = { dashboard:'Dashboard', tasks:'Tasks', projects:'Dự án', time:'Thời gian', calendar:'Lịch tháng', finance:'Thu Chi', habits:'Thói quen', journal:'Nhật ký', stats:'Thống kê', settings:'Cài đặt' };
   document.title = `${titles[_currentPage]||''} — FreelanceHub`;
 
   // Scroll to top
@@ -131,6 +132,8 @@ function bootAuthenticatedApp() {
   initSidebar();
   initNav();
   initShortcuts();
+  initPwa();
+  initDeadlineReminders();
 
   const newRecurring = processRecurringTasks();
   navigateTo('dashboard');

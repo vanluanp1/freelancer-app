@@ -397,17 +397,6 @@ function savePomoSettings() {
   showToast('Đã lưu cài đặt Pomodoro!', 'success');
 }
 
-function requestNotifPermission() {
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
-}
-function sendNotification(title, body) {
-  if ('Notification' in window && Notification.permission === 'granted') {
-    new Notification(title, { body, icon: '🍅' });
-  }
-}
-
 // ============================================================
 // TIME TRACKER
 // ============================================================
@@ -588,7 +577,7 @@ function renderSchedule() {
               ondragover="event.preventDefault()" ondrop="onScheduleDrop(event,'${ds}',${h})">
               ${dayBlocks.map(b => {
                 const proj = b.projectId ? getProjectById(b.projectId) : null;
-                const color = proj ? proj.color : 'var(--primary)';
+                const color = safeCssColor(proj ? proj.color : 'var(--primary)');
                 const dur = b.duration || 60;
                 const heightPx = (dur / 60) * 48;
                 return `<div class="weekly-block" style="background:${color};height:${Math.max(24,heightPx)}px"

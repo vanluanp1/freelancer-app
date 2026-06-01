@@ -66,6 +66,13 @@ function renderSettings() {
           <span class="toggle-slider"></span>
         </label>
       </div>
+      <div class="settings-row">
+        <div><div class="settings-label">Nhắc deadline</div><div class="settings-desc">Thông báo task quá hạn, task hôm nay và Pomodoro</div></div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="set-notifications" ${s.notificationsEnabled?'checked':''}>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
     </div>
 
     <!-- Finance Settings -->
@@ -161,12 +168,13 @@ function renderCloudSyncSettings() {
       <button class="btn btn-primary btn-sm" onclick="signInWithGoogle()">Đăng nhập Google</button>
     </div>`;
   }
+  const sync = getCloudSyncState();
   return `<div class="settings-row">
     <div><div class="settings-label">${escapeHtml(getCloudUserLabel())}</div><div class="settings-desc">${escapeHtml(user.email || '')} · Dữ liệu cloud được bảo vệ theo tài khoản.</div></div>
     <button class="btn btn-ghost btn-sm" onclick="signOutCloud()">Đăng xuất</button>
   </div>
   <div class="settings-row">
-    <div><div class="settings-label">Backup cloud</div><div class="settings-desc">Đồng bộ snapshot hiện tại hoặc khôi phục dữ liệu đã lưu trên Supabase.</div></div>
+    <div><div class="settings-label">Backup cloud tự động</div><div class="settings-desc">Tự lưu sau khi thay đổi khoảng 15 giây. <span id="cloud-sync-status" class="cloud-sync-status ${sync.status}">${escapeHtml(sync.message)}</span></div></div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-ghost btn-sm" onclick="uploadCloudBackup()">☁️ Đồng bộ</button>
       <button class="btn btn-ghost btn-sm" onclick="restoreCloudBackup()">↩️ Khôi phục</button>
@@ -181,11 +189,13 @@ function saveAllSettings() {
     workHoursEnd: document.getElementById('set-work-end')?.value || '18:00',
     soundEnabled: document.getElementById('set-sound')?.checked !== false,
     autoBackup: document.getElementById('set-auto-backup')?.checked || false,
+    notificationsEnabled: document.getElementById('set-notifications')?.checked || false,
   });
   // Finance settings
   const exchangeRate = parseFloat(document.getElementById('set-exchange-rate')?.value) || 25000;
   const autoConvert = document.getElementById('set-auto-convert')?.checked || false;
   saveFinanceSettings({ exchangeRate, autoConvert });
+  if (document.getElementById('set-notifications')?.checked) requestNotifPermission();
   showToast('Đã lưu cài đặt!', 'success');
 }
 

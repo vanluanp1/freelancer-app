@@ -1,0 +1,17 @@
+{
+  "name": "FreelanceHub",
+  "short_name": "FreelanceHub",
+  "description": "Quan ly cong viec ca nhan cho freelancer",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F7F8FA",
+  "theme_color": "#6C63FF",
+  "icons": [
+    {
+      "src": "/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
