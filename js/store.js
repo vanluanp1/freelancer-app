@@ -19,15 +19,63 @@ const KEYS = {
 };
 const BACKUP_STORAGE_KEY = 'fl_backup_snapshots';
 const LAST_BACKUP_DATE_KEY = 'fl_last_backup_date';
+const LEGACY_STORAGE_MIGRATION_KEY = 'fl_legacy_storage_migrated';
 const BACKUP_VERSION = 1;
 const MAX_LOCAL_BACKUPS = 7;
+let _activeStorageUserId = null;
 
 // ---- Generic ----
+function getScopedStorageKey(key) {
+  return _activeStorageUserId ? `fl_user_${_activeStorageUserId}_${key}` : null;
+}
+function getScopedItem(key) {
+  const scopedKey = getScopedStorageKey(key);
+  return scopedKey ? localStorage.getItem(scopedKey) : null;
+}
+function setScopedItem(key, value) {
+  const scopedKey = getScopedStorageKey(key);
+  if (scopedKey) localStorage.setItem(scopedKey, value);
+}
+function removeScopedItem(key) {
+  const scopedKey = getScopedStorageKey(key);
+  if (scopedKey) localStorage.removeItem(scopedKey);
+}
 function load(key) {
-  try { return JSON.parse(localStorage.getItem(key)) || null; } catch { return null; }
+  try { return JSON.parse(getScopedItem(key)) || null; } catch { return null; }
 }
 function save(key, data) {
-  localStorage.setItem(key, JSON.stringify(data));
+  setScopedItem(key, JSON.stringify(data));
+}
+function migrateLegacyStorage() {
+  if (localStorage.getItem(LEGACY_STORAGE_MIGRATION_KEY)) return;
+  [...Object.values(KEYS), BACKUP_STORAGE_KEY, LAST_BACKUP_DATE_KEY].forEach(key => {
+    const legacyValue = localStorage.getItem(key);
+    const scopedKey = getScopedStorageKey(key);
+    if (legacyValue !== null && scopedKey && localStorage.getItem(scopedKey) === null) {
+      localStorage.setItem(scopedKey, legacyValue);
+    }
+    localStorage.removeItem(key);
+  });
+  localStorage.setItem(LEGACY_STORAGE_MIGRATION_KEY, _activeStorageUserId);
+}
+function initializeScopedStorage() {
+  if (!load(KEYS.columns)) save(KEYS.columns, DEFAULT_COLUMNS);
+  if (!load(KEYS.txCategories)) save(KEYS.txCategories, DEFAULT_TX_CATEGORIES);
+
+  const s = getSettings();
+  if (s.autoBackup) {
+    const lastBackup = getScopedItem(LAST_BACKUP_DATE_KEY);
+    const todayStr = today();
+    if (lastBackup !== todayStr) createLocalBackupSnapshot('automatic');
+  }
+}
+function activateUserStorage(userId) {
+  if (!userId) return false;
+  const changed = _activeStorageUserId !== userId;
+  _activeStorageUserId = userId;
+  migrateLegacyStorage();
+  initializeScopedStorage();
+  return changed;
 }
 
 // ---- Settings ----
@@ -504,7 +552,7 @@ function createLocalBackupSnapshot(reason = 'manual') {
   const payload = createBackupPayload(reason);
   backups.unshift(payload);
   save(BACKUP_STORAGE_KEY, backups.slice(0, MAX_LOCAL_BACKUPS));
-  localStorage.setItem(LAST_BACKUP_DATE_KEY, today());
+  setScopedItem(LAST_BACKUP_DATE_KEY, today());
   return payload;
 }
 function exportAllData(silent = false) {
@@ -565,7 +613,7 @@ function getBackupStatus() {
 }
 function clearAllData() {
   createLocalBackupSnapshot('before-clear');
-  Object.values(KEYS).forEach(v => localStorage.removeItem(v));
+  Object.values(KEYS).forEach(removeScopedItem);
   showToast('Đã xóa toàn bộ dữ liệu!', 'info');
   setTimeout(() => location.reload(), 1000);
 }
@@ -703,19 +751,3 @@ function processRecurringTasks() {
 function getTransactionCategories() { return getTxCategories(); }
 function addTransactionCategory(data) { return addTxCategory(data); }
 function deleteTransactionCategory(id) { return deleteTxCategory(id); }
-
-// Initialize defaults
-(function init() {
-  if (!load(KEYS.columns)) save(KEYS.columns, DEFAULT_COLUMNS);
-  if (!load(KEYS.txCategories)) save(KEYS.txCategories, DEFAULT_TX_CATEGORIES);
-
-  // Auto Backup Check
-  const s = getSettings();
-  if (s.autoBackup) {
-    const lastBackup = localStorage.getItem(LAST_BACKUP_DATE_KEY);
-    const todayStr = today();
-    if (lastBackup !== todayStr) {
-      createLocalBackupSnapshot('automatic');
-    }
-  }
-})();

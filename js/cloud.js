@@ -58,10 +58,12 @@ async function initCloudSync() {
     return false;
   }
   _cloudUser = data.session?.user || null;
+  if (_cloudUser) activateUserStorage(_cloudUser.id);
   if (!_authSubscription) {
     const { data: authListener } = client.auth.onAuthStateChange((_event, session) => {
       _cloudUser = session?.user || null;
       if (_cloudUser) {
+        activateUserStorage(_cloudUser.id);
         showAuthenticatedApp();
         if (typeof bootAuthenticatedApp === 'function') bootAuthenticatedApp();
       } else {
