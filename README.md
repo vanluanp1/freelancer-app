@@ -1,95 +1,165 @@
 # FreelanceHub
 
-Ung dung quan ly cong viec ca nhan danh cho freelancer. Du an chay truc tiep tren trinh duyet, ho tro dang nhap Google, dong bo du lieu rieng theo tung tai khoan va cai dat nhu mot Progressive Web App (PWA).
+Ứng dụng quản lý công việc cá nhân dành cho freelancer, có đăng nhập Google, đồng bộ cloud riêng theo tài khoản và hỗ trợ cài đặt như một Progressive Web App (PWA).
+
+A personal productivity app for freelancers with Google login, per-account cloud sync, and Progressive Web App (PWA) support.
+
+[Tiếng Việt](#tiếng-việt) | [English](#english)
 
 ## Demo
 
 - Website: [freelancer-app-one.vercel.app](https://freelancer-app-one.vercel.app/)
 - Repository: [github.com/vanluanp1/freelancer-app](https://github.com/vanluanp1/freelancer-app)
 
-## Tinh nang
+## Tiếng Việt
 
-- Dashboard tong quan deadline, Pomodoro va khoi luong cong viec theo du an.
-- Quan ly task theo Kanban, muc do uu tien, deadline va du an.
-- Lich thang: keo tha task vao ngay de thay doi deadline.
-- Quan ly du an va theo doi tien do.
-- Pomodoro, habit tracker va nhat ky cong viec.
-- Thong ke thu chi ca nhan.
-- Nhac deadline va Pomodoro bang Notification API.
-- Backup JSON thu cong va snapshot noi bo hang ngay.
-- Tu dong dong bo backup len Supabase sau khi du lieu thay doi.
-- Tu dong khoi phuc ban cloud moi hon khi dang nhap tren thiet bi khac.
-- PWA: co the cai len desktop hoac dien thoai va mo giao dien khi offline.
+### Tính năng
 
-## Bao mat
+- Dashboard tổng quan deadline, Pomodoro và khối lượng công việc theo dự án.
+- Quản lý task theo Kanban, mức độ ưu tiên, deadline và dự án.
+- Lịch tháng: kéo thả task vào ngày để thay đổi deadline.
+- Theo dõi dự án, habit, nhật ký công việc và thu chi cá nhân.
+- Nhắc deadline và Pomodoro bằng Notification API.
+- Backup JSON thủ công và snapshot nội bộ hằng ngày.
+- Tự động đồng bộ backup lên Supabase sau khi dữ liệu thay đổi.
+- Tự động khôi phục bản cloud mới hơn khi đăng nhập trên thiết bị khác.
+- PWA: có thể cài lên desktop hoặc điện thoại và mở giao diện khi offline.
 
-- Bat buoc dang nhap Google qua Supabase Auth truoc khi truy cap ung dung.
-- Du lieu local duoc tach rieng theo ID cua tai khoan dang nhap.
-- Bang backup tren Supabase bat Row Level Security (RLS).
-- Moi tai khoan chi duoc doc, ghi va xoa backup cua chinh minh.
-- Frontend chi su dung Supabase Publishable Key.
-- CSP va cac security header duoc cau hinh trong `vercel.json`.
+### Bảo mật
 
-Khong dua `service_role` key, Google Client Secret hoac bat ky secret backend nao vao frontend hay GitHub.
+- Bắt buộc đăng nhập Google qua Supabase Auth trước khi truy cập ứng dụng.
+- Dữ liệu local được tách riêng theo ID của tài khoản đăng nhập.
+- Bảng backup trên Supabase bật Row Level Security (RLS).
+- Mỗi tài khoản chỉ được đọc, ghi và xóa backup của chính mình.
+- Frontend chỉ sử dụng Supabase Publishable Key.
+- CSP và các security header được cấu hình trong [`vercel.json`](vercel.json).
 
-## Cong nghe
+Không đưa `service_role` key, Google Client Secret hoặc bất kỳ secret backend nào vào frontend hay GitHub.
 
-- HTML, CSS va JavaScript thuần
-- Supabase Auth, Database va RLS
-- Google OAuth 2.0
-- Vercel
-- Service Worker va Web App Manifest
+### Chạy local
 
-## Chay local
-
-Du an la static site. Co the dung mot static web server bat ky, vi du:
+Đây là static site. Có thể chạy bằng một static web server bất kỳ:
 
 ```powershell
 npx serve .
 ```
 
-Sau do mo URL local duoc hien thi trong terminal.
+Sau đó mở URL local được hiển thị trong terminal.
 
-## Cau hinh Supabase
+### Cấu hình Supabase
 
-1. Tao mot project tren [Supabase](https://supabase.com/).
-2. Mo SQL Editor va chay noi dung file [`supabase/schema.sql`](supabase/schema.sql).
-3. Dien Project URL va Publishable Key vao [`js/config.js`](js/config.js).
-4. Trong Authentication > URL Configuration, them URL production cua ung dung vao Redirect URLs.
-5. Trong Authentication > Providers, bat Google provider.
+1. Tạo project trên [Supabase](https://supabase.com/).
+2. Mở SQL Editor và chạy nội dung file [`supabase/schema.sql`](supabase/schema.sql).
+3. Điền Project URL và Publishable Key vào [`js/config.js`](js/config.js).
+4. Trong Authentication > URL Configuration, thêm URL production của ứng dụng vào Redirect URLs.
+5. Trong Authentication > Providers, bật Google provider.
 
-## Cau hinh Google OAuth
+### Cấu hình Google OAuth
 
-1. Tao OAuth Client ID loai Web application trong [Google Cloud Console](https://console.cloud.google.com/).
-2. Them callback URL do Supabase cung cap vao Authorized redirect URIs:
+1. Tạo OAuth Client ID loại Web application trong [Google Cloud Console](https://console.cloud.google.com/).
+2. Thêm callback URL do Supabase cung cấp vào Authorized redirect URIs:
 
 ```text
 https://<project-ref>.supabase.co/auth/v1/callback
 ```
 
-3. Dien Google Client ID va Client Secret vao Google provider tren Supabase.
+3. Điền Google Client ID và Client Secret vào Google provider trên Supabase.
 
-Client Secret chi duoc luu trong Supabase Dashboard, khong dat trong source code.
+Client Secret chỉ được lưu trong Supabase Dashboard, không đặt trong source code.
 
-## Deploy Vercel
+### Deploy Vercel
 
-Import repository vao [Vercel](https://vercel.com/) va deploy nhu mot static site. Co the deploy tu terminal:
+Import repository vào [Vercel](https://vercel.com/) và deploy như một static site, hoặc chạy:
 
 ```powershell
 npx vercel --prod
 ```
 
-Sau khi co domain production, cap nhat Redirect URLs trong Supabase Auth.
+Sau khi có domain production, cập nhật Redirect URLs trong Supabase Auth.
 
-## Kiem tra nhanh
+## English
 
-Chay smoke test tren Windows:
+### Features
+
+- Dashboard with deadline priorities, Pomodoro status, and project workload.
+- Kanban task management with priorities, deadlines, and projects.
+- Monthly calendar: drag and drop tasks onto dates to update deadlines.
+- Project tracking, habits, work journal, and personal finance statistics.
+- Deadline and Pomodoro reminders using the Notification API.
+- Manual JSON export and daily internal snapshots.
+- Automatic backup sync to Supabase after local changes.
+- Automatic restore when a newer cloud backup exists on another device.
+- Installable PWA with basic offline access.
+
+### Security
+
+- Google login through Supabase Auth is required before accessing the app.
+- Local data is scoped by the authenticated user ID.
+- Row Level Security (RLS) is enabled for the Supabase backup table.
+- Each account can only read, write, and delete its own backup.
+- The frontend only uses a Supabase Publishable Key.
+- CSP and security headers are configured in [`vercel.json`](vercel.json).
+
+Never commit a `service_role` key, Google Client Secret, or any backend secret to the frontend or GitHub.
+
+### Run locally
+
+This project is a static site. Start it with any static web server:
+
+```powershell
+npx serve .
+```
+
+Then open the local URL printed in the terminal.
+
+### Configure Supabase
+
+1. Create a project on [Supabase](https://supabase.com/).
+2. Open the SQL Editor and run [`supabase/schema.sql`](supabase/schema.sql).
+3. Add the Project URL and Publishable Key to [`js/config.js`](js/config.js).
+4. In Authentication > URL Configuration, add the production URL to Redirect URLs.
+5. In Authentication > Providers, enable the Google provider.
+
+### Configure Google OAuth
+
+1. Create a Web application OAuth Client ID in the [Google Cloud Console](https://console.cloud.google.com/).
+2. Add the Supabase callback URL to Authorized redirect URIs:
+
+```text
+https://<project-ref>.supabase.co/auth/v1/callback
+```
+
+3. Add the Google Client ID and Client Secret to the Google provider in Supabase.
+
+Store the Client Secret in the Supabase Dashboard only. Do not add it to the source code.
+
+### Deploy to Vercel
+
+Import the repository into [Vercel](https://vercel.com/) as a static site, or run:
+
+```powershell
+npx vercel --prod
+```
+
+After receiving the production domain, update Redirect URLs in Supabase Auth.
+
+## Tech Stack
+
+- HTML, CSS, and vanilla JavaScript
+- Supabase Auth, Database, and RLS
+- Google OAuth 2.0
+- Vercel
+- Service Worker and Web App Manifest
+
+## Quick Check
+
+Run the smoke test on Windows:
 
 ```powershell
 powershell.exe -ExecutionPolicy Bypass -File .\tests\smoke-check.ps1
 ```
 
-Kiem tra syntax JavaScript:
+Check JavaScript syntax:
 
 ```powershell
 node --check .\js\app.js
@@ -97,7 +167,7 @@ node --check .\js\cloud.js
 node --check .\sw.js
 ```
 
-## Cau truc thu muc
+## Project Structure
 
 ```text
 .
@@ -118,4 +188,4 @@ node --check .\sw.js
 
 ## License
 
-Du an hien chua khai bao license. Mac dinh, tac gia giu toan bo quyen.
+No license has been declared. All rights are reserved by the author by default.
