@@ -7,6 +7,7 @@ let _tasksTab = 'kanban'; // 'kanban' | 'recurring'
 let _expandedDailyGroups = new Set();
 
 function renderTasks() {
+  processRecurringTasks();
   const columns = getColumns(null);
   const projects = getProjects();
   return `
@@ -103,18 +104,18 @@ function renderColumn(col, projectId) {
 
 function renderColumnCards(colId, projectId, tasks, filteredIds = null, isFiltering = false) {
   if (isFiltering) return tasks.map(t => renderTaskCard(t, filteredIds)).join('');
-  const dailyTasks = tasks.filter(isTodayDailyRecurringTask);
-  if (dailyTasks.length < 2) return tasks.map(t => renderTaskCard(t, filteredIds)).join('');
+  const dailyTasks = tasks.filter(isTodayRecurringTask);
+  if (dailyTasks.length < 1) return tasks.map(t => renderTaskCard(t, filteredIds)).join('');
 
   const groupedIds = new Set(dailyTasks.map(t => t.id));
   const otherTasks = tasks.filter(t => !groupedIds.has(t.id));
   return `${renderDailyTaskGroupCard(colId, dailyTasks)}${otherTasks.map(t => renderTaskCard(t, filteredIds)).join('')}`;
 }
 
-function isTodayDailyRecurringTask(task) {
+function isTodayRecurringTask(task) {
   if (!task || task.completedAt || !task.recurringId || task.recurringDate !== today()) return false;
   const template = getRecurringById(task.recurringId);
-  return !!template && template.active !== false && template.repeatType === 'daily';
+  return !!template && template.active !== false;
 }
 
 function renderDailyTaskGroupCard(colId, tasks) {
@@ -135,7 +136,7 @@ function renderDailyTaskGroupCard(colId, tasks) {
     <button class="daily-task-group-head" onclick="toggleDailyTaskGroup('${colId}')">
       <span class="daily-task-group-icon">🔁</span>
       <span class="daily-task-group-main">
-        <span class="daily-task-group-title">Task hằng ngày</span>
+        <span class="daily-task-group-title">Task lặp lại hôm nay</span>
         <span class="daily-task-group-sub">${total} việc cần tick${estimated ? ` · ${estimated}h` : ''}${priorityText ? ` · ${priorityText}` : ''}</span>
       </span>
       <span class="daily-task-group-count">${total}</span>
