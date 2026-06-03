@@ -1,4 +1,4 @@
-const CACHE_NAME = 'freelancehub-v5';
+const CACHE_NAME = 'freelancehub-v6';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -11,6 +11,7 @@ const APP_SHELL = [
   '/js/cloud.js',
   '/js/notifications.js',
   '/js/pwa.js',
+  '/js/kanban-recurring-patch.js',
   '/js/audio.js',
   '/js/dnd.js',
   '/js/pages/dashboard.js',
