@@ -4,6 +4,7 @@
 
 let _taskFilter = { project: '', priority: '', deadline: '', search: '' };
 let _tasksTab = 'kanban'; // 'kanban' | 'recurring'
+let _expandedDailyGroups = new Set();
 
 function renderTasks() {
   const columns = getColumns(null);
@@ -81,6 +82,7 @@ function renderColumn(col, projectId) {
   const allTasks = getTasksByColumn(col.id);
   const isFiltering = _taskFilter.project || _taskFilter.priority || _taskFilter.deadline || _taskFilter.search;
   const filteredIds = isFiltering ? filterTasks(allTasks).map(t => t.id) : null;
+  const cardsHtml = renderColumnCards(col.id, projectId, allTasks, filteredIds, isFiltering);
 
   return `<div class="kanban-col" data-col-id="${col.id}" id="col-${col.id}">
     <div class="col-header" oncontextmenu="showColMenu(event,'${col.id}')">
@@ -89,7 +91,7 @@ function renderColumn(col, projectId) {
       <button class="col-menu-btn" onclick="event.stopPropagation();showColMenu(event,'${col.id}')">···</button>
     </div>
     <div class="col-cards" id="cards-${col.id}" data-col-id="${col.id}">
-      ${allTasks.map(t => renderTaskCard(t, filteredIds)).join('')}
+      ${cardsHtml}
     </div>
     <div class="col-add-btn">
       <button onclick="showQuickAdd('${col.id}','${projectId||''}')">
@@ -97,6 +99,75 @@ function renderColumn(col, projectId) {
       </button>
     </div>
   </div>`;
+}
+
+function renderColumnCards(colId, projectId, tasks, filteredIds = null, isFiltering = false) {
+  if (isFiltering) return tasks.map(t => renderTaskCard(t, filteredIds)).join('');
+  const dailyTasks = tasks.filter(isTodayDailyRecurringTask);
+  if (dailyTasks.length < 2) return tasks.map(t => renderTaskCard(t, filteredIds)).join('');
+
+  const groupedIds = new Set(dailyTasks.map(t => t.id));
+  const otherTasks = tasks.filter(t => !groupedIds.has(t.id));
+  return `${renderDailyTaskGroupCard(colId, dailyTasks)}${otherTasks.map(t => renderTaskCard(t, filteredIds)).join('')}`;
+}
+
+function isTodayDailyRecurringTask(task) {
+  if (!task || task.completedAt || !task.recurringId || task.recurringDate !== today()) return false;
+  const template = getRecurringById(task.recurringId);
+  return !!template && template.active !== false && template.repeatType === 'daily';
+}
+
+function renderDailyTaskGroupCard(colId, tasks) {
+  const expanded = _expandedDailyGroups.has(colId);
+  const total = tasks.length;
+  const estimated = tasks.reduce((sum, task) => sum + (Number(task.estimatedHours) || 0), 0);
+  const priorities = tasks.reduce((acc, task) => {
+    acc[task.priority || 'medium'] = (acc[task.priority || 'medium'] || 0) + 1;
+    return acc;
+  }, {});
+  const priorityText = [
+    priorities.high ? `${priorities.high} cao` : '',
+    priorities.medium ? `${priorities.medium} TB` : '',
+    priorities.low ? `${priorities.low} thấp` : '',
+  ].filter(Boolean).join(' · ');
+
+  return `<div class="daily-task-group-card ${expanded ? 'expanded' : ''}" id="daily-group-${colId}">
+    <button class="daily-task-group-head" onclick="toggleDailyTaskGroup('${colId}')">
+      <span class="daily-task-group-icon">🔁</span>
+      <span class="daily-task-group-main">
+        <span class="daily-task-group-title">Task hằng ngày</span>
+        <span class="daily-task-group-sub">${total} việc cần tick${estimated ? ` · ${estimated}h` : ''}${priorityText ? ` · ${priorityText}` : ''}</span>
+      </span>
+      <span class="daily-task-group-count">${total}</span>
+      <span class="daily-task-group-caret">${expanded ? '⌃' : '⌄'}</span>
+    </button>
+    <div class="daily-task-group-list">
+      ${tasks.map(task => renderDailyTaskGroupItem(task)).join('')}
+    </div>
+  </div>`;
+}
+
+function renderDailyTaskGroupItem(task) {
+  const project = task.projectId ? getProjectById(task.projectId) : null;
+  return `<label class="daily-task-group-item" onclick="event.stopPropagation()">
+    <input type="checkbox" onchange="completeDailyTaskFromGroup(event,'${task.id}')">
+    <span class="daily-task-check-ui"></span>
+    <span class="daily-task-group-item-body">
+      <span class="daily-task-group-item-title">${escapeHtml(task.title)}</span>
+      <span class="daily-task-group-item-meta">
+        ${project ? `<span class="daily-task-project" style="background:${safeCssColor(project.color)}">${escapeHtml(project.name)}</span>` : ''}
+        ${priorityText(task.priority)}
+        ${task.estimatedHours ? `<span>⏱️ ${task.estimatedHours}h</span>` : ''}
+      </span>
+    </span>
+    <button type="button" class="daily-task-open-btn" onclick="event.stopPropagation();openTaskModal('${task.id}')" title="Mở chi tiết">Chi tiết</button>
+  </label>`;
+}
+
+function priorityText(priority) {
+  if (priority === 'high') return '<span>🔴 Cao</span>';
+  if (priority === 'low') return '<span>🟢 Thấp</span>';
+  return '<span>🟡 Trung bình</span>';
 }
 
 function filterTasks(tasks) {
@@ -451,6 +522,39 @@ function startPomodoroForTask(taskId) {
   }, 100);
 }
 
+function toggleDailyTaskGroup(colId) {
+  if (_expandedDailyGroups.has(colId)) _expandedDailyGroups.delete(colId);
+  else _expandedDailyGroups.add(colId);
+  const card = document.getElementById(`daily-group-${colId}`);
+  if (!card) return;
+  card.classList.toggle('expanded', _expandedDailyGroups.has(colId));
+  const caret = card.querySelector('.daily-task-group-caret');
+  if (caret) caret.textContent = _expandedDailyGroups.has(colId) ? '⌃' : '⌄';
+}
+
+function completeDailyTaskFromGroup(event, taskId) {
+  event.stopPropagation();
+  const checkbox = event.target;
+  if (!checkbox.checked) return;
+  const task = getTaskById(taskId);
+  if (!task) return;
+
+  const doneCol = getColumns(task.projectId || null).find(c => c.title.includes('Hoàn thành'))
+    || getAllColumns().find(c => c.title.includes('Hoàn thành'));
+  const nextOrder = doneCol ? getTasksByColumn(doneCol.id).length : task.order;
+  updateTask(taskId, {
+    completedAt: now(),
+    status: 'done',
+    columnId: doneCol ? doneCol.id : task.columnId,
+    order: nextOrder,
+  });
+
+  playTaskComplete();
+  showToast('Đã tick xong task hằng ngày!', 'success');
+  renderCurrentPage();
+  if (_tasksTab === 'kanban') setTimeout(() => initTasksDnD(), 50);
+}
+
 function initTasksDnD() {
   const board = document.getElementById('kanban-board');
   if (!board) return;
@@ -470,7 +574,7 @@ function initTasksDnD() {
       const cardsEl = document.getElementById(`cards-${colId}`);
       if (cardsEl) {
         const tasks = getTasksByColumn(colId);
-        cardsEl.innerHTML = tasks.map(t => renderTaskCard(t)).join('');
+        cardsEl.innerHTML = renderColumnCards(colId, col.projectId || null, tasks, null, false);
         cardsEl.querySelectorAll('.task-card').forEach(c => c.setAttribute('draggable','true'));
       }
       // Update count
