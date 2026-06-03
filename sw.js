@@ -1,4 +1,4 @@
-const CACHE_NAME = 'freelancehub-v2';
+const CACHE_NAME = 'freelancehub-v4';
 const APP_SHELL = [
   '/',
   '/index.html',
