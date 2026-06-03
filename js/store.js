@@ -721,6 +721,7 @@ function addRecurring(data) {
     weekDays: [1,2,3,4,5],
     startDate: today(),
     endDate: null,
+    subtasks: [],
     active: true,
     lastGenerated: null,
     createdAt: now(),
@@ -794,6 +795,7 @@ function processRecurringTasks() {
           note: template.note,
           columnId: template.columnId,
           deadline: dateStr,
+          subtasks: cloneRecurringSubtasks(template.subtasks),
           recurringId: template.id,
           recurringDate: dateStr,
         });
@@ -805,6 +807,12 @@ function processRecurringTasks() {
     }
   });
   return generated;
+}
+
+function cloneRecurringSubtasks(subtasks) {
+  return (subtasks || [])
+    .filter(s => s && String(s.text || '').trim())
+    .map(s => ({ id: genId(), text: String(s.text).trim(), done: false }));
 }
 
 // ---- Aliases so finance.js can call getTransactionCategories / addTransactionCategory / deleteTransactionCategory ----

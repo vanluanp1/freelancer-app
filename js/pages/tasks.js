@@ -621,6 +621,7 @@ function renderRecurringCard(t) {
   const project = t.projectId ? getProjectById(t.projectId) : null;
   const repeatLabel = getRepeatLabel(t);
   const instanceCount = getTasks().filter(tk => tk.recurringId === t.id).length;
+  const subtaskCount = (t.subtasks || []).length;
   return `<div class="recurring-card ${t.active?'':'paused'}">
     <div class="recurring-card-left">
       <div class="recurring-card-indicator ${t.active?'active':'paused'}"></div>
@@ -633,6 +634,7 @@ function renderRecurringCard(t) {
         ${t.endDate   ? `<span>→ ${t.endDate}</span>` : '<span style="color:var(--text-muted)">Vô thời hạn</span>'}
         ${project ? `<span class="task-project-dot" style="background:${safeCssColor(project.color)}">${escapeHtml(project.name)}</span>` : ''}
         ${priorityBadge(t.priority)}
+        ${subtaskCount ? `<span style="color:var(--text-muted);font-size:11px">✅ ${subtaskCount} task con</span>` : ''}
         <span style="color:var(--text-muted);font-size:11px">📝 ${instanceCount} task đã tạo</span>
       </div>
     </div>
@@ -696,6 +698,7 @@ function openRecurringModal(id) {
   const repeatType   = t?.repeatType   || 'daily';
   const intervalDays = t?.intervalDays || 1;
   const weekDays     = t?.weekDays     || [1,2,3,4,5];
+  const subtasks     = t?.subtasks || [];
 
   openModal(`<div class="modal">
     <div class="modal-header">
@@ -788,8 +791,20 @@ function openRecurringModal(id) {
       </div>
 
       <div class="form-group">
+        <label class="form-label">Task con</label>
+        <div class="rec-subtask-field">
+          <div class="rec-subtask-desc">Các dòng này sẽ có ô tick trong task được tạo mỗi ngày.</div>
+          <div id="rec-subtask-list" class="rec-subtask-list">
+            ${renderRecurringSubtaskRows(subtasks)}
+          </div>
+          <div class="subtask-add-row">
+            <input id="rec-new-subtask-input" class="form-input" placeholder="VD: Kiểm tra inbox, gửi báo cáo..." style="font-size:12px;padding:6px 10px"
+              onkeydown="if(event.key==='Enter')addRecurringSubtaskUI()">
+            <button class="btn btn-ghost btn-sm" onclick="addRecurringSubtaskUI()">+</button>
+          </div>
+        </div>
         <label class="form-label">Ghi chú</label>
-        <textarea id="rec-note" class="form-textarea" style="min-height:60px">${escapeHtml(t?.note||'')}</textarea>
+        <textarea id="rec-note" class="form-textarea" placeholder="Ghi chú..." style="min-height:60px">${escapeHtml(t?.note||'')}</textarea>
       </div>
     </div>
     <div class="modal-footer">
@@ -797,6 +812,68 @@ function openRecurringModal(id) {
       <button class="btn btn-primary" onclick="submitRecurringModal('${id||''}')">${isEdit?'Lưu thay đổi':'Tạo template'}</button>
     </div>
   </div>`);
+}
+
+function renderRecurringSubtaskRows(subtasks) {
+  const valid = (subtasks || []).filter(s => s && String(s.text || '').trim());
+  if (!valid.length) {
+    return `<div class="rec-subtask-empty">Chưa có task con. Thêm các bước nhỏ để checklist hằng ngày gọn hơn.</div>`;
+  }
+  return valid.map(s => renderRecurringSubtaskRow(s.text, s.id || genId())).join('');
+}
+
+function renderRecurringSubtaskRow(text, id) {
+  return `<div class="subtask-item rec-subtask-item" data-sub-id="${escapeHtml(id)}">
+    <label class="subtask-check-label">
+      <input type="checkbox" disabled>
+      <input class="form-input rec-subtask-text" value="${escapeHtml(text)}" placeholder="Tên task con..." style="font-size:12px;padding:6px 8px">
+    </label>
+    <button class="subtask-del" onclick="deleteRecurringSubtaskUI('${escapeHtml(id)}')" title="Xóa">✕</button>
+  </div>`;
+}
+
+function addRecurringSubtaskUI() {
+  const input = document.getElementById('rec-new-subtask-input');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+  const list = document.getElementById('rec-subtask-list');
+  if (!list) return;
+  const empty = list.querySelector('.rec-subtask-empty');
+  if (empty) empty.remove();
+  list.insertAdjacentHTML('beforeend', renderRecurringSubtaskRow(text, genId()));
+  input.value = '';
+  input.focus();
+}
+
+function deleteRecurringSubtaskUI(id) {
+  const selectorId = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(id) : id.replace(/"/g, '\\"');
+  const row = document.querySelector(`.rec-subtask-item[data-sub-id="${selectorId}"]`);
+  if (row) row.remove();
+  const list = document.getElementById('rec-subtask-list');
+  if (list && !list.querySelector('.rec-subtask-item')) {
+    list.innerHTML = `<div class="rec-subtask-empty">Chưa có task con. Thêm các bước nhỏ để checklist hằng ngày gọn hơn.</div>`;
+  }
+}
+
+function syncRecurringSubtasksToOpenInstances(recurringId, templateSubtasks) {
+  const tasks = getTasks();
+  let changed = false;
+  const normalizedTemplate = (templateSubtasks || []).filter(s => s && String(s.text || '').trim());
+  tasks.forEach(task => {
+    if (task.recurringId !== recurringId || task.completedAt) return;
+    const current = task.subtasks || [];
+    task.subtasks = normalizedTemplate.map(sub => {
+      const existing = current.find(item => item.text === sub.text);
+      return {
+        id: existing?.id || genId(),
+        text: sub.text,
+        done: !!existing?.done,
+      };
+    });
+    changed = true;
+  });
+  if (changed) saveTasks(tasks);
 }
 
 function onRepeatTypeChange() {
@@ -828,6 +905,14 @@ function submitRecurringModal(existingId) {
     showToast('Chọn ít nhất 1 ngày trong tuần!', 'error'); return;
   }
 
+  const subtasks = Array.from(document.querySelectorAll('.rec-subtask-item'))
+    .map(row => ({
+      id: row.dataset.subId || genId(),
+      text: row.querySelector('.rec-subtask-text')?.value.trim() || '',
+      done: false,
+    }))
+    .filter(s => s.text);
+
   const data = {
     title,
     projectId:      document.getElementById('rec-project')?.value || null,
@@ -840,11 +925,13 @@ function submitRecurringModal(existingId) {
     repeatType,
     intervalDays,
     weekDays,
+    subtasks,
   };
 
   if (existingId) {
     // Reset lastGenerated so engine re-evaluates from startDate
     updateRecurring(existingId, { ...data, lastGenerated: null });
+    syncRecurringSubtasksToOpenInstances(existingId, subtasks);
     showToast('Đã cập nhật template!', 'success');
   } else {
     addRecurring(data);
